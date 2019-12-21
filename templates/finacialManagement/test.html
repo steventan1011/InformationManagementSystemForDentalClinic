@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style type="text/css">body {zoom:1;}</style>
+  <title>财务缴费系统</title>
+
+  <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+</head>
+<body>
+<div class="layui-row layui-col-space15">
+<div class="layui-col-md8">
+    <div class="layui-card">
+        <div class="layui-card-header">
+        </div>
+        <div class="layui-card-body">
+       <div class="layui-tab" lay-filter="test">
+  <ul class="layui-tab-title">
+    <li class="layui-this" lay-id="11">药单缴费</li>
+    <li lay-id="22">检查单缴费</li>
+
+  </ul>
+  <div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+
+      <form action="" class="layui-form">
+        <div class="layui-inline">
+          <input class="layui-input" placeholder="查询挂号号码" name="patientID" id="inputNumber" autocomplete="off">
+        </div>
+        <div class="layui-inline">
+          <input class="layui-input" name="date" id="dateChoice">
+        </div>
+        <button class="layui-btn" lay-submit lay-filter="search">搜索</button>
+      </form>
+      <table id="demo" lay-filter="drug"></table>
+    </div>
+    <div class="layui-tab-item">
+      <form action="" class="layui-form">
+        <div class="layui-inline">
+          <input class="layui-input" placeholder="查询挂号号码" name="patientID" id="inputNumber1" autocomplete="off">
+        </div>
+        <div class="layui-inline">
+          <input class="layui-input" name="date" id="dateChoice1">
+        </div>
+        <button class="layui-btn" lay-submit lay-filter="search1">搜索</button>
+      </form>
+      <table class="layui-hide" id="test" lay-filter="check"></table>
+    </div>
+  </div>
+</div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+
+<script type="text/html" id="toolbarDrug">
+        <button class="layui-btn layui-btn-warm" lay-submit lay-filter="submit"
+            lay-event="postDrugPayment">缴费</button>
+    </script>
+<script type="text/html" id="toolbarCheck">
+        <button class="layui-btn" lay-submit lay-filter="submit"
+            lay-event="postDrugPayment">缴费</button>
+    </script>
+<script src="/static/layui/layui.js"></script>
+<script>
+  layui.use(['laydate','element','table','layer','form'],function () {
+    var laydate = layui.laydate;
+    var $ = layui.jquery;
+    var element = layui.element; //Tab的切换功能，切换事件监听等，需要依赖element模块
+    var table = layui.table;
+    var layer = layui.layer;
+    var form = layui.form;
+
+    //日期选择器
+    laydate.render({
+      elem: '#dateChoice',
+      type: 'date',
+      value: (new Date().toLocaleDateString().replace(/\//g, "-")),
+      position: 'fixed'
+    });
+    laydate.render({
+      elem: '#dateChoice1',
+      type: 'date',
+      value: (new Date().toLocaleDateString().replace(/\//g, "-")),
+      position: 'fixed'
+    });
+
+    //选项卡
+    var layid = location.hash.replace(/^#test=/, '');
+    element.tabChange('test', layid);
+    element.on('tab(test)', function(elem){
+      location.hash = 'test='+ $(this).attr('lay-id');
+    });
+
+
+    var tableCache = null;
+    var parseData = function(res){
+      for (var i=0;i<res.length;i++){
+        res[i]["totalpay"]=(res[i].quantity * res[i].price).toFixed(2);
+      }
+      return res;
+    };
+    //表格数据
+    table.render({
+      elem: '#demo'
+      ,id:'demo'
+      ,name:'药单'
+      ,toolbar:'#toolbarDrug'
+      ,totalRow: true //开启合计
+      ,cols: [[ //表头
+        {field: 'id', title: 'ID', width:80, sort: true, totalRowText: '合计'}
+        ,{field: 'drugname', title: '药名', width:200}
+        ,{field: 'specification', title: '规格', width:180}
+        ,{field: 'quantity', title: '购买数量', width: 100,sort:true}
+        ,{field: 'price', title: '单价', width: 80}
+        ,{field: 'totalpay', title: '总价(元)', width: 120,totalRow:true}
+      ]]
+    });
+    table.render({
+      elem: '#test'
+      ,toolbar: '#toolbarCheck'
+      ,title: '检查单'
+      ,totalRow: true
+      ,cols: [[
+        {field:'id', title:'ID', width:120, fixed: 'left', unresize: true, sort: true, totalRowText: '合计'}
+        ,{field:'checkname', title:'检查项名称', width:120, edit: 'text'}
+        ,{field:'doctor', title:'负责医生', width:120, edit: 'text'}
+        ,{field:'price', title:'价格', width:80, edit: 'text', sort: true,totalRow:true}
+      ]]
+    });
+
+    //搜索挂号号码
+      var formdata_drug = null;
+    form.on('submit(search)',function (data) {
+      //异步加载数据
+        formdata_drug = data.field;
+      $.ajax({
+        type:'get',
+        url:'api/getdrugPayment',
+        data:formdata_drug,
+        dataType:'json',
+        success:function (res) {
+          tableCache = parseData(res["data"]);
+          table.reload('demo',{data:tableCache,limit:tableCache.length});
+        },
+        error:function () {
+          layer.msg("查找不到数据");
+        }
+      });
+      return false;
+    });
+
+    var formdata_check=null;
+    form.on('submit(search1)',function (data) {
+        formdata_check=data.field;
+      //异步加载数据
+      $.ajax({
+        type:'get',
+        url:'api/getcheckPayment',
+          data:formdata_check,
+        dataType:'json',
+        success:function (res) {
+          tableCache = res["data"];
+          table.reload('test',{data:tableCache,limit:tableCache.length});
+        },
+        error:function () {
+          layer.msg("查找不到数据");
+        }
+      });
+      return false;
+    });
+
+    //药品缴费按钮
+    table.on('toolbar(drug)', function (obj) {
+        console.log(formdata_drug)
+        $.ajax({
+            type: "post",
+            url:"api/updatedrugPayment",
+            dataType:"json",
+            data:formdata_drug,
+            success:function (res) {
+                if (res["status"] == 110) {
+                layer.msg("请再提交一次！")
+                } else if (res["status"] == 200) {
+                    layer.msg("药单缴费成功!");
+                }
+            },
+            error:function () {
+                    layer.msg("请再提交一次！")}
+
+        })
+            });
+    //检查项缴费按钮
+    table.on('toolbar(check)', function (obj) {
+        console.log(formdata_check)
+        $.ajax({
+            type: "post",
+            url:"api/updatecheckPayment",
+            dataType:"json",
+            data:formdata_check,
+            success:function (res) {
+                if (res["status"] == 110) {
+                layer.msg("请再提交一次！")
+                } else if (res["status"] == 200) {
+                    layer.msg("检查单缴费成功!");
+                }
+            },
+            error:function () {
+                    layer.msg("请再提交一次！")}
+
+        })
+            });
+
+  });
+</script>
+</body>
+</html>

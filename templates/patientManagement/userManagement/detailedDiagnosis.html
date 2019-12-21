@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>详细诊断报告</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../../static/layui/css/layui.css" media="all">
+</head>
+
+<body>
+
+
+    <fieldset class="layui-elem-field">
+        <legend>检查结果</legend>
+    </fieldset>
+    <table id="detailedCheck"></table>
+    
+    <fieldset class="layui-elem-field">
+        <legend>诊断意见</legend>
+    </fieldset>
+    <table id="detailedDiagonsis"></table>
+
+
+</body>
+<script src="../../../static/layui/layui.js"></script>
+<script>
+    function readyForLoading() {
+        // 获取数据
+        var tableCache = parent.tableCache;
+        console.log(tableCache);
+        layui.use(['table', 'layer','form'], function () {
+            var table = layui.table;
+            var $ = layui.$;
+            var layer = layui.layer;
+            
+            // 渲染检查结果表格，应当展示其所做的多项检查
+            table.render({
+                elem: '#detailedCheck',
+                height: 300,
+                // data: tableCache,
+                page: true, //开启分页
+                limit: 30,
+                cellMinWidth: 80,
+                data: tableCache,
+                cols: [
+                    [ //表头
+                        {
+                            field: 'date',
+                            title: '就诊日期'
+                        }, {
+                            field: 'doctor',
+                            title: '检查医师',
+                        }, {
+                            field: 'room',
+                            title: '就诊诊室',
+                        }, {
+                            field: 'result',
+                            title: '检查结果',
+                        }
+                    ]
+                ]
+            });
+
+            // 渲染诊断结果表格，应当展示其所做的最终诊断结果
+            table.render({
+                elem: '#detailedDiagonsis',
+                height: 300,
+                // data: tableCache,
+                page: true, //开启分页
+                limit: 30,
+                cellMinWidth: 50,
+                data: tableCache,
+                cols: [
+                    [ //表头
+                        {
+                            field: 'date',
+                            title: '就诊日期'
+                        }, {
+                            field: 'doctor',
+                            title: '主治医师'
+                        }, {
+                            field: 'room',
+                            title: '就诊诊室'
+                        }, {
+                            field: 'diagnosis',
+                            title: '诊断结果',
+                            cellMinWidth: 100
+
+                        }, {
+                            field: 'other_prescription',
+                            title: '处方',
+                            cellMinWidth: 100
+
+                        }
+                    ]
+                ]
+            });
+
+        });
+    };
+    window.onload = readyForLoading();
+</script>
+
+</html>

@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加急诊记录</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+    <style>
+
+.layui-table-cell {
+	height: auto;
+}
+    </style>
+
+</head>
+<body>
+<form class="layui-form" action="" lay-filter="default">
+    <div class="layui-form-item">
+        <label class="layui-form-label">挂号号码</label>
+        <div class="layui-input-block">
+            <input type="tel" name="patientid"  autocomplete="off" class="layui-input" style="width: 100px" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">诊断日期</label>
+        <div class="layui-input-block">
+            <input type="text" name="date"   id="date" lay-verify="date"  style="width: 100px" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+</form>
+
+<form class="layui-form" action="" lay-filter="add">
+
+        <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">检查结果</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body layui-text">
+                <div id="toolbar">
+                    <div>
+                        <button type="button" class="layui-btn layui-btn-sm" data-type="addRow1" title="添加一行">
+                            <i class="layui-icon layui-icon-add-1"></i> 添加一行
+                        </button>
+                    </div>
+                </div>
+                <div id="tableRescheck" class="table-overlay">
+                    <table id="checkTable" lay-filter="checkTable" class="layui-hide"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">治疗建议</label>
+        <div class="layui-input-block">
+            <textarea name="treat" placeholder="请输入内容" class="layui-textarea"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否建议复查</label>
+        <div class="layui-input-block">
+            <input type="radio" name="check" value="yes" title="是" checked="">
+            <input type="radio" name="check" value="no" title="否">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">治疗项</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body layui-text">
+                <div id="toolbar">
+                    <div>
+                        <button type="button" class="layui-btn layui-btn-sm" data-type="addRow2" title="添加一行">
+                            <i class="layui-icon layui-icon-add-1"></i> 添加一行
+                        </button>
+                    </div>
+                </div>
+                <div id="tableRestreat" class="table-overlay">
+                    <table id="treatTable" lay-filter="treatTable" class="layui-hide"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">处方药单</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body layui-text">
+                <div id="toolbar">
+                    <div>
+                        <button type="button" class="layui-btn layui-btn-sm" data-type="addRow" title="添加一行">
+                            <i class="layui-icon layui-icon-add-1"></i> 添加一行
+                        </button>
+                    </div>
+                </div>
+                <div id="tableResdrug" class="table-overlay">
+                    <table id="dataTable" lay-filter="dataTable" class="layui-hide"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-filter="btnSubmit" lay-submit>立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+<script type="text/html" id="selectcheck" >
+    <div>	<select  name='jtcyGxmc' lay-verify='' lay-search=''>
+        <option value=""></option>
+        <option value="父子">父子</option>
+        <option value="母子">母子</option>
+    </select></div>
+
+</script>
+
+
+
+<script type="text/html" id="selecttreat" >
+    <div>	<select  id="ttt" name='jtcytreat' lay-verify='' lay-search=''>
+        <option value="默认值" selected>默认值</option>
+        <option value="父子 ">父子1</option>
+        <option value="母子">母子1</option>
+    </select></div>
+
+</script>
+
+<script type="text/html" id="selectdrug" >
+    <div><select   name='jtcydrug' lay-verify='' lay-search=''>
+        <option value="默认值">默认值</option>
+        <option value="父子">父子2</option>
+        <option value="母子">母子2</option>
+    </select></div>
+
+</script>
+
+<script src="/static/layui/layui.js"></script>
+<script>
+    // 从父页面获取病人信息和医生信息
+    var flag = null;
+    var patientid = parent.patientid;
+    var doctor = parent.doctor;
+    var selectdata=[["阿莫西林"],["牙菌斑检测"],["调合"]];
+    //函数获取诊室信息
+    var room=function(){}
+
+    layui.use(['form',"element","table"], function() {
+        var form = layui.form;
+        var layer2 = layui.layer;
+        var $ = layui.jquery;
+        var table=layui.table//药单表格
+
+        form.render();
+
+
+        // 表单默认信息初始化
+        form.val("default", {
+            "patientid": patientid
+            ,"date": GetDateStr(0)
+            ,"room": room
+            ,"doctor": doctor
+        })
+
+
+// 提交按钮，生成数据:读取表单数据，读取表格数据，并转化成数组
+        form.on('submit(btnSubmit)', function (data) {
+            //表单数据formData
+            var formData = data.field;//表单数据
+            var drugData = table.cache[layTableId];//药单表数据
+            var checkData = table.cache[layTableId1];
+            var treatData = table.cache[layTableId2];
+
+            for(var i = 0;i<selectdata[0].length;i++){
+                drugData[i]["name"] = selectdata[0][i]
+            }
+            for(var j = 0;j<selectdata[1].length;j++){
+                checkData[j]["name"] = selectdata[1][j]
+            }
+            for(var k = 0;k<selectdata[2].length;k++){
+                treatData[k]["name"] = selectdata[2][k]
+            }
+            formData["drug"]=JSON.stringify(drugData);
+            formData["treatitem"]=JSON.stringify(treatData);
+            formData["checkitem"]=JSON.stringify(checkData);
+
+            formData["patientid"]=patientid;
+
+            $.ajax({
+                type:'post',
+                url:'api/updaterecord',
+                data:formData,
+                dataType:'json',
+                success:function (res) {
+                    if (res["status"]==200){
+                        layer.msg("成功")
+                    }
+                },
+                error:function () {
+                    alert("异步加载失败！")
+                }
+            })
+
+            //生成总体数据的函数，将表单数据和其他合并
+
+        });
+
+
+        //数据表格实例化
+        var tbWidth = $("#tableRes").width();
+        var layTableId = "layTable";
+        var layTableId1 = "layTable1";
+        var layTableId2 = "layTable2";
+
+        //表格渲染
+        var tableIns = table.render({
+            elem: '#dataTable',
+            id: layTableId,
+            data: dataor.tbData,
+            width: tbWidth,
+            loading: true,
+            limit: 100, //每页默认显示的数量
+            even: false, //不开启隔行背景
+            cols: [[
+                {title: '序号', type: 'numbers'},
+                {field: 'name', title: '药名',templet: '   <div><select id=\"drugline0\" lay-filter=\"change\"  name=\'jtcydrug\' lay-verify=\'\' lay-search=\'\'>\n' +
+                        '<option value="头孢羟氨苄">头孢羟氨苄</option>\n'+
+                        '<option value="头孢呋辛酯（达力新） ">头孢呋辛酯（达力新） </option>\n'+
+                        '<option value="阿莫西林">阿莫西林</option>\n'+
+                        '<option value="阿莫西林（阿莫仙）">阿莫西林（阿莫仙）</option>\n'+
+                        '<option value="阿莫西林颗粒（再林）">阿莫西林颗粒（再林）</option>\n'+
+                        '<option value="氨苄西林胶囊（安必仙）">氨苄西林胶囊（安必仙）</option>\n'+
+                        '<option value="阿莫西林克拉维酸钾（安奇）">阿莫西林克拉维酸钾（安奇）</option>\n'+
+                        '<option value="头孢氨苄">头孢氨苄</option>\n'+
+                        '<option value="头孢克肟">头孢克肟</option>\n'+
+                        '<option value="头孢克洛">头孢克洛</option>\n'+
+                        '<option value="罗红霉素">罗红霉素</option>\n'+
+                        '<option value="罗红霉素（严迪）">罗红霉素（严迪）</option>\n'+
+                        '<option value="罗红霉素（小儿严迪 ）">罗红霉素（小儿严迪 ）</option>\n'+
+                            '<option value="阿奇霉素">阿奇霉素</option>\n'+
+                        '<option value="甲硝唑">甲硝唑</option>\n'+
+                        '<option value="替硝唑">替硝唑</option>\n'+
+                    '<option value="奥硝唑">奥硝唑</option>\n'+
+                    '<option value="司帕沙星">司帕沙星</option>\n'+
+'<option value="注射用青霉素钠">注射用青霉素钠</option>\n'+
+'<option value="头孢呋辛钠（达力新）">头孢呋辛钠（达力新）</option>\n'+
+'<option value="无水头孢唑林钠（新泰林）">无水头孢唑林钠（新泰林）</option>\n'+
+'<option value="头孢曲松钠（菌必治）">头孢曲松钠（菌必治）</option>\n'+
+'<option value="庆大霉素 ">庆大霉素 </option>\n'+
+'<option value="盐酸左氧氟沙星氯化钠注射液（莱美兴）">盐酸左氧氟沙星氯化钠注射液（莱美兴）</option>\n'+
+'<option value="乳酸左氧氟沙星（来立信）">乳酸左氧氟沙星（来立信）</option>\n'+
+'<option value="阿奇霉素片维宏">阿奇霉素片维宏</option>\n'+
+'<option value="阿奇霉素干混悬剂 维宏颗粒">阿奇霉素干混悬剂 维宏颗粒</option>\n'+
+'<option value="阿奇霉素氯化钠注射液 欣匹特 0.2/100ml ">阿奇霉素氯化钠注射液 欣匹特 0.2/100ml </option>\n'+
+'<option value="甲硝唑注射液 甲硝唑 0.2%*250ml">甲硝唑注射液 甲硝唑 0.2%*250ml</option>\n'+
+'<option value="替硝唑注射液（裕宁） 0.4/250ml ">替硝唑注射液（裕宁） 0.4/250ml </option>\n'+
+'<option value="克林霉素（莱美特宁）">克林霉素（莱美特宁）</option>\n'+
+'<option value="奈替米星（君欣）   ">奈替米星（君欣）   </option>\n'+
+'<option value="制霉菌素 ">制霉菌素 </option>\n'+
+'<option value="利巴韦林注射液 （病毒唑）">利巴韦林注射液 （病毒唑）</option>\n'+
+'<option value="尼美舒力（力美松）">尼美舒力（力美松）</option>\n'+
+'<option value="布洛芬">布洛芬</option>\n'+
+'<option value="布洛芬缓释胶囊（芬必得）">布洛芬缓释胶囊（芬必得）</option>\n'+
+'<option value="盐酸利多卡因注射液 （利多卡因） ">盐酸利多卡因注射液 （利多卡因） </option>\n'+
+'<option value="复方阿替卡因注射液 （必兰）">复方阿替卡因注射液 （必兰）</option>\n'+
+'<option value="酚磺乙胺注射液 止血敏">酚磺乙胺注射液 止血敏</option>\n'+
+'<option value="注射用卡洛磺钠 卡洛磺钠 ">注射用卡洛磺钠 卡洛磺钠 </option>\n'+
+'<option value="羟乙基淀粉40氯化钠注射液（706代血浆）">羟乙基淀粉40氯化钠注射液（706代血浆）</option>\n'+
+'<option value="地塞米松磷酸钠注射液 氟美松 ">地塞米松磷酸钠注射液 氟美松 </option>\n'+
+'<option value="谷维素片 谷维素 ">谷维素片 谷维素 </option>\n'+
+'<option value="维生素C片">维生素C片</option>\n'+
+'<option value="维胺颗粒">维胺颗粒</option>\n'+
+'<option value="复方氯乙定含漱液（口泰）">复方氯乙定含漱液（口泰）</option>\n'+
+'<option value="西吡氯铵含漱液  （依信）">西吡氯铵含漱液  （依信）</option>\n'+
+'<option value="浓替硝唑含漱液">浓替硝唑含漱液</option>\n'+
+'<option value="破伤风人免疫球蛋白 ">破伤风人免疫球蛋白 </option>\n'+
+'<option value="破伤风抗毒素 TAT ">破伤风抗毒素 TAT </option>\n'+
+'<option value="西地碘含片（华素片）">西地碘含片（华素片）</option>\n'+
+                        '    </select></div>'},
+                {field: 'number', title: '数量', edit: 'text'},
+                {field: 'tempId', title: '操作', templet: function(d){
+                        return '<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del" lay-id="'+ d.tempId +'"><i class="layui-icon layui-icon-delete"></i>移除</a>';
+                    }}
+            ]]
+                      ,done: function(res, curr, count){
+              //数据渲染完的回调。
+              //由于layui 设置了超出隐藏，所以这里改变下，以兼容操作按钮的下拉菜单
+              $(".layui-table-body, .layui-table-box, .layui-table-cell").css('overflow', 'visible');
+             }
+
+        });
+
+        //检查项表格渲染
+        var tableIns1 = table.render({
+            elem: '#checkTable',
+            id: layTableId1,
+            data: dataor1.tbData,
+            width: tbWidth,
+            loading: true,
+            limit: 100, //每页默认显示的数量
+            even: false, //不开启隔行背景
+            cols: [[
+                {title: '序号', type: 'numbers'},
+                {field:'check', title: '检查项名称',templet: '    <div>\t<select id="treatline0" lay-filter="change1" name=\'jtcyGxmc\' lay-verify=\'\' lay-search=\'\'>\n' +
+                        '      <option value="牙菌斑检测">牙菌斑检测</option>\n'+
+'      <option value="牙周疾病监测">牙周疾病监测</option>\n'+
+'      <option value="全口牙病系统检测">全口牙病系统检测</option>\n'+
+'      <option value="口腔CT">口腔CT</option>\n'+
+'      <option value="脱落细胞学检查">脱落细胞学检查</option>\n'+
+'      <option value="牙齿及牙周探诊">牙齿及牙周探诊</option>\n'+
+'      <option value="牙齿及牙周叩诊">牙齿及牙周叩诊</option>\n'+
+'      <option value="牙齿及牙周扪诊">牙齿及牙周扪诊</option>\n'+
+'      <option value="颞颔关节功能视诊">颞颔关节功能视诊</option>\n'+
+'      <option value="颞颔关节功能触诊">颞颔关节功能触诊</option>\n'+
+'      <option value="舌检查">舌检查</option>\n'+
+'      <option value="涎腺及导管">涎腺及导管</option>\n'+
+'      <option value="颔面部常规检查">颔面部常规检查</option>\n'+
+'      <option value="口腔常规检查">口腔常规检查</option>\n'+
+'      <option value="口腔内窥镜系统检查">口腔内窥镜系统检查</option>\n'+
+'      <option value="洗牙">洗牙</option>\n'+
+'      <option value="全口牙病系统检查与治疗设计">全口牙病系统检查与治疗设计</option>\n'+
+'      <option value="咬合检查">咬合检查</option>\n'+
+'      <option value="颌力测量检查">颌力测量检查</option>\n'+
+'      <option value="咀嚼功能检查">咀嚼功能检查</option>\n'+
+'      <option value="下颌运动检查">下颌运动检查</option>\n'+
+'      <option value="常规面像检查">常规面像检查</option>\n'+
+'      <option value="口腔内镜检查">口腔内镜检查</option>\n'+
+'      <option value="牙髓活力检查">牙髓活力检查</option>\n'+
+'      <option value="根管长度测量">根管长度测量</option>\n'+
+'      <option value="口腔X线一次成像(RVG)">口腔X线一次成像(RVG)</option>\n'+
+'      <option value="测色仪检查">测色仪检查</option>\n'+
+'      <option value="义齿压痛定位仪检查">义齿压痛定位仪检查</option>\n'+
+'      <option value="触痛仪检查">触痛仪检查</option>\n'+
+                        '    </select></div>',sort:false} ,
+                {field: 'inner', title: '检查结果', edit: 'text'},
+                {field: 'tempId', title: '操作', templet: function(d){
+                        return '<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del1" lay-id="'+ d.tempId +'"><i class="layui-icon layui-icon-delete"></i>移除</a>';
+                    }},
+            ]]
+
+                                ,done: function(res, curr, count){
+              //数据渲染完的回调。
+              //由于layui 设置了超出隐藏，所以这里改变下，以兼容操作按钮的下拉菜单
+              $(".layui-table-body, .layui-table-box, .layui-table-cell").css('overflow', 'visible');
+             }
+
+        });
+
+        //治疗项表格渲染
+        var tableIns2 = table.render({
+            elem: '#treatTable',
+            id: layTableId2,
+            data: dataor2.tbData,
+            width: tbWidth,
+            loading: true,
+            limit: 100, //每页默认显示的数量
+            even: false, //不开启隔行背景
+            cols: [[
+                {title: '序号', type: 'numbers'},
+                {field: 'name', title: '治疗项', templet: '     <div>\t<select  id="checkline0" lay-filter="change2" name=\'jtcytreat\' lay-verify=\'\' lay-search=\'\'>\n' +
+                        '      <option value="调合">调合</option>\n'+
+'      <option value="氟防龋治疗">氟防龋治疗</option>\n'+
+'      <option value="牙脱敏治疗">牙脱敏治疗</option>\n'+
+'      <option value="口腔局部冲洗上药">口腔局部冲洗上药</option>\n'+
+'      <option value="不良修复体拆除">不良修复体拆除</option>\n'+
+'      <option value="牙开窗助萌术">牙开窗助萌术</option>\n'+
+'      <option value="口腔局部止血">口腔局部止血</option>\n'+
+'      <option value="口内脓肿切开引流术">口内脓肿切开引流术</option>\n'+
+'      <option value="牙外伤结扎固定术">牙外伤结扎固定术</option>\n'+
+'      <option value="拆除固定装置">拆除固定装置</option>\n'+
+'      <option value="简单充填术">简单充填术</option>\n'+
+'      <option value="复杂充填术">复杂充填术</option>\n'+
+'      <option value="牙体桩钉固位修复术">牙体桩钉固位修复术</option>\n'+
+'      <option value="牙体缺损粘接修复术">牙体缺损粘接修复术</option>\n'+
+'      <option value="充填体抛光术">充填体抛光术</option>\n'+
+'      <option value="前牙美容修复术">前牙美容修复术</option>\n'+
+'      <option value="树脂嵌体修复术">树脂嵌体修复术</option>\n'+
+'      <option value="橡皮障隔湿法">橡皮障隔湿法</option>\n'+
+'      <option value="盖髓术">盖髓术</option>\n'+
+'      <option value="牙髓失活术">牙髓失活术</option>\n'+
+'      <option value="开髓引流术">开髓引流术</option>\n'+
+'      <option value="干髓术">干髓术</option>\n'+
+'      <option value="牙髓摘除术">牙髓摘除术</option>\n'+
+'      <option value="根管预备">根管预备</option>\n'+
+'      <option value="根管充填术">根管充填术</option>\n'+
+'      <option value="显微根管治疗术">显微根管治疗术</option>\n'+
+'      <option value="髓腔消毒术">髓腔消毒术</option>\n'+
+'      <option value="牙髓塑化治疗术">牙髓塑化治疗术</option>\n'+
+'      <option value="根管再治疗术">根管再治疗术</option>\n'+
+'      <option value="髓腔穿孔修补术">髓腔穿孔修补术</option>\n'+
+'      <option value="根管壁穿孔外科修补术">根管壁穿孔外科修补术</option>\n'+
+'      <option value="根管内固定术">根管内固定术</option>\n'+
+'      <option value="劈裂牙治疗">劈裂牙治疗</option>\n'+
+'      <option value="后牙纵折固定术">后牙纵折固定术</option>\n'+
+'      <option value="根尖诱导成形术">根尖诱导成形术</option>\n'+
+'      <option value="窝沟封闭">窝沟封闭</option>\n'+
+'      <option value="乳牙预成冠修复">乳牙预成冠修复</option>\n'+
+'      <option value="儿童前牙树脂冠修复">儿童前牙树脂冠修复</option>\n'+
+'      <option value="制戴固定式缺隙保持器">制戴固定式缺隙保持器</option>\n'+
+'      <option value="制戴活动式缺隙保持器">制戴活动式缺隙保持器</option>\n'+
+'      <option value="制戴活动矫正器">制戴活动矫正器</option>\n'+
+'      <option value="前牙根折根牵引">前牙根折根牵引</option>\n'+
+'      <option value="钙化桥打通术">钙化桥打通术</option>\n'+
+'      <option value="全牙列垫固定术">全牙列垫固定术</option>\n'+
+'      <option value="活髓切断术">活髓切断术</option>\n'+
+'      <option value="洁治">洁治</option>\n'+
+'      <option value="龈下刮治">龈下刮治</option>\n'+
+'      <option value="牙周固定">牙周固定</option>\n'+
+'      <option value="去除牙周固定">去除牙周固定</option>\n'+
+'      <option value="牙面光洁术">牙面光洁术</option>\n'+
+'      <option value="牙龈保护剂塞治">牙龈保护剂塞治</option>\n'+
+'      <option value="急性坏死性龈炎局部清创">急性坏死性龈炎局部清创</option>\n'+
+'      <option value="根面平整术">根面平整术</option>\n'+
+'      <option value="颞下颌关节复位">颞下颌关节复位</option>\n'+
+'      <option value="冠周炎局部治疗">冠周炎局部治疗</option>\n'+
+'      <option value="干槽症换药">干槽症换药</option>\n'+
+'      <option value="冠修复">冠修复</option>\n'+
+'      <option value="嵌体修复">嵌体修复</option>\n'+
+'      <option value="桩核根帽修复">桩核根帽修复</option>\n'+
+'      <option value="贴面修复">贴面修复</option>\n'+
+'      <option value="桩冠修复">桩冠修复</option>\n'+
+'      <option value="固定桥">固定桥</option>\n'+
+'      <option value="固定修复计算机辅助设计">固定修复计算机辅助设计</option>\n'+
+'      <option value="咬合重建">咬合重建</option>\n'+
+'      <option value="粘结">粘结</option>\n'+
+'      <option value="活动桥">活动桥</option>\n'+
+'      <option value="塑料可摘局部义齿">塑料可摘局部义齿</option>\n'+
+'      <option value="铸造可摘局部义齿">铸造可摘局部义齿</option>\n'+
+'      <option value="美容义齿">美容义齿</option>\n'+
+'      <option value="即刻义齿">即刻义齿</option>\n'+
+'      <option value="附着体义齿">附着体义齿</option>\n'+
+'      <option value="总义齿">总义齿</option>\n'+
+'      <option value="拆冠桥">拆冠桥</option>\n'+
+'      <option value="拆桩">拆桩</option>\n'+
+'      <option value="加焊">加焊</option>\n'+
+'      <option value="加装饰面">加装饰面</option>\n'+
+'      <option value="烤瓷冠崩瓷修理">烤瓷冠崩瓷修理</option>\n'+
+'      <option value="调改义齿">调改义齿</option>\n'+
+'      <option value="取局部  关系记录">取局部关系记录</option>\n'+
+'      <option value="取正中  关系记录">取正中关系记录</option>\n'+
+'      <option value="加人工牙">加人工牙</option>\n'+
+'      <option value="义齿接长基托">义齿接长基托</option>\n'+
+'      <option value="义齿裂纹及折裂修理">义齿裂纹及折裂修理</option>\n'+
+'      <option value="义齿组织面重衬">义齿组织面重衬</option>\n'+
+'      <option value="加卡环">加卡环</option>\n'+
+'      <option value="增加铸造基托">增加铸造基托</option>\n'+
+'      <option value="加颌支托">加颌支托</option>\n'+
+'      <option value="加铸颌面">加铸颌面</option>\n'+
+'      <option value="增加加固装置">增加加固装置</option>\n'+
+'      <option value="加连接杆">加连接杆</option>\n'+
+'      <option value="塑料颌面加高咬合">塑料颌面加高咬合</option>\n'+
+'      <option value="弹性假牙龈">弹性假牙龈</option>\n'+
+'      <option value="镀金加工">镀金加工</option>\n'+
+'      <option value="铸造加工">铸造加工</option>\n'+
+'      <option value="配金加工">配金加工</option>\n'+
+'      <option value="黄金材料加工">黄金材料加工</option>\n'+
+'      <option value="加磁性固位体">加磁性固位体</option>\n'+
+'      <option value="附着体增换">附着体增换</option>\n'+
+'      <option value="牙再植术">牙再植术</option>\n'+
+'      <option value="牙移植术">牙移植术</option>\n'+
+'      <option value="牙槽骨修整术">牙槽骨修整术</option>\n'+
+'      <option value="牙槽嵴增高术">牙槽嵴增高术</option>\n'+
+'      <option value="颌骨隆突修整术">颌骨隆突修整术</option>\n'+
+'      <option value="上颌结节成形术">上颌结节成形术</option>\n'+
+'      <option value="口腔上颌窦瘘修补术">口腔上颌窦瘘修补术</option>\n'+
+'      <option value="上颌窦开窗异物取出术">上颌窦开窗异物取出术</option>\n'+
+'      <option value="唇颊沟加深术">唇颊沟加深术</option>\n'+
+'      <option value="修复前软组织成型术">修复前软组织成型术</option>\n'+
+'      <option value="阻生智齿龈瓣整形术">阻生智齿龈瓣整形术</option>\n'+
+'      <option value="牙槽突骨折结扎固定术">牙槽突骨折结扎固定术</option>\n'+
+'      <option value="颌骨病灶刮除术">颌骨病灶刮除术</option>\n'+
+'      <option value="皮肤瘘管切除术">皮肤瘘管切除术</option>\n'+
+'      <option value="根端囊肿摘除术">根端囊肿摘除术</option>\n'+
+'      <option value="牙齿萌出囊肿袋形术">牙齿萌出囊肿袋形术</option>\n'+
+'      <option value="颌骨囊肿摘除术">颌骨囊肿摘除术</option>\n'+
+'      <option value="牙外科正畸术">牙外科正畸术</option>\n'+
+'      <option value="根尖切除术">根尖切除术</option>\n'+
+'      <option value="根尖搔刮术">根尖搔刮术</option>\n'+
+'      <option value="牙龈翻瓣术">牙龈翻瓣术</option>\n'+
+'      <option value="牙龈再生术">牙龈再生术</option>\n'+
+'      <option value="牙龈切除术">牙龈切除术</option>\n'+
+'      <option value="显微根管外科手术">显微根管外科手术</option>\n'+
+'      <option value="牙周骨成形手术">牙周骨成形手术</option>\n'+
+'      <option value="牙冠延长术">牙冠延长术</option>\n'+
+'      <option value="龈瘤切除术">龈瘤切除术</option>\n'+
+'      <option value="牙周植骨术">牙周植骨术</option>\n'+
+'      <option value="截根术">截根术</option>\n'+
+'      <option value="分根术">分根术</option>\n'+
+'      <option value="半牙切除术">半牙切除术</option>\n'+
+'      <option value="引导性牙周组织再生术">引导性牙周组织再生术</option>\n'+
+'      <option value="松动牙根管内固定术">松动牙根管内固定术</option>\n'+
+                        '    </select></div>',sort:false},
+                {field: 'tempId', title: '操作', templet: function(d){
+                        return '<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del2" lay-id="'+ d.tempId +'"><i class="layui-icon layui-icon-delete"></i>移除</a>';
+                    }},
+
+
+            ]]                ,done: function(res, curr, count){
+              //数据渲染完的回调。
+              //由于layui 设置了超出隐藏，所以这里改变下，以兼容操作按钮的下拉菜单
+              $(".layui-table-body, .layui-table-box, .layui-table-cell").css('overflow', 'visible');
+             }
+
+
+
+        });
+
+        //定义事件集合
+        var active = {
+            addRow: function(){	//添加一行
+                console.log("新增行开始")
+                console.log(selectdata[0])
+                var aa = (document.getElementById('tableResdrug')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[0]
+                    {#console.log(temp)#}
+                    {#console.log(selectdata[1][i])#}
+                    {#console.log(temp.value)#}
+                    selectdata[0][i]=temp.value //恢复 表格的值
+                }
+                selectdata[0].push("头孢羟氨苄")
+
+                {#console.log(selectdata[0])#}
+
+                var oldData = table.cache[layTableId];
+                var newRow = {tempId: new Date().valueOf()};
+                oldData.push(newRow);
+                tableIns.reload({
+                    data : oldData
+                });
+
+                             //将表格内的select id重赋值，并且将元素赋值
+                var aa = (document.getElementById('tableResdrug')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[0]
+                    temp.id="drugline"+(i).toString()
+                    {#console.log(temp.options.length)#}
+                    {#console.log(aa.childNodes[i].childNodes[1].childNodes[0].childNodes[0])#}
+                    for (var k = 0; k < temp.options.length; k++){
+
+                        {#console.log("开始配对")#}
+                        {#               console.log(temp.options[k].value)#}
+                        {#console.log(selectdata[1][i])#}
+                                        if (temp.options[k].value == selectdata[0][i]){
+                                            $("#drugline"+i.toString()).children(k).attr("selected");
+                                            form.render();
+                                    {#console.log("配对成功")#}
+                                    {#        console.log(temp)#}
+                                        temp.value=selectdata[0][i];
+
+                                        break;  }  }
+
+                }
+            },
+            addRow1: function(){	//添加一行
+                console.log("新增行开始")
+                var aa = (document.getElementById('tableRescheck')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[1]
+                    {#console.log(selectdata[1][i])#}
+                    {#console.log(temp.value)#}
+                    selectdata[1][i]=temp.value //恢复 表格的值
+                }
+                selectdata[1].push("牙周疾病监测")
+
+                console.log(selectdata[1])
+
+
+                var oldData1 = table.cache[layTableId1];
+                var newRow1 = {tempId: new Date().valueOf()};
+                oldData1.push(newRow1);
+                tableIns1.reload({
+                    data : oldData1
+                })
+
+                           //将表格内的select id重赋值，并且将元素赋值
+                var aa = (document.getElementById('tableRescheck')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[1]
+                    temp.id="checkline"+(i).toString()
+                    {#console.log(temp.options.length)#}
+                    for (var k = 0; k < temp.options.length; k++){
+
+                        {#console.log("开始配对")#}
+                        {#               console.log(temp.options[k].value)#}
+                        {#console.log(selectdata[1][i])#}
+                                        if (temp.options[k].value == selectdata[1][i]){
+                                            $("#checkline"+i.toString()).children(k).attr("selected");
+                                            form.render();
+                                    {#console.log("配对成功")#}
+                                    {#        console.log(temp)#}
+                                        temp.value=selectdata[1][i];
+
+                                        break;  }  }
+
+                }
+
+            },
+            addRow2: function(){	//添加一行// 加一行时，先获得表中原有所有数值值
+                console.log("新增行开始")
+                var aa = (document.getElementById('tableRestreat')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[1]
+                    {#console.log(selectdata[2][i])#}
+                    {#console.log(temp.value)#}
+                    selectdata[2][i]=temp.value //恢复 表格的值
+                }
+                selectdata[2].push("氟防龋治疗")
+
+                console.log(selectdata[2])
+
+                //对数据表格部分进行重载
+                var oldData2 = table.cache[layTableId2];
+                var newRow2 = {tempId: new Date().valueOf()};
+                oldData2.push(newRow2);
+                tableIns2.reload({
+                    data : oldData2
+                });
+
+                //将表格内的select id重赋值，并且将元素赋值
+                var aa = (document.getElementById('tableRestreat')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[1]
+                    temp.id="treatline"+(i).toString()
+                    {#console.log(temp.options.length)#}
+                    for (var k = 0; k < temp.options.length; k++){
+
+                        {#console.log("开始配对")#}
+                        {#               console.log(temp.options[k].value)#}
+                        {#console.log(selectdata[2][i])#}
+                                        if (temp.options[k].value == selectdata[2][i]){
+                                            $("#treatline"+i.toString()).children(k).attr("selected");
+                                            form.render();
+                                    {#console.log("配对成功")#}
+                                    {#        console.log(temp)#}
+                                        temp.value=selectdata[2][i];
+
+                                        break;  }  }
+
+                }
+
+            },
+
+            removeEmptyTableCache: function(){
+                var oldData = table.cache[layTableId];
+                for(var i=0, row; i < oldData.length; i++){
+                    row = oldData[i];
+                    if(!row || !row.tempId){
+                        oldData.splice(i, 1);    //删除一项
+                        selectdata[0].splice(i, 1)
+                    }
+                    continue;
+                }
+                tableIns.reload({
+                    data : oldData
+                });
+
+                                 //将表格内的select id重赋值，并且将元素赋值
+                var aa = (document.getElementById('tableResdrug')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[0]
+                    temp.id="drugline"+(i).toString()
+                    {#console.log(temp.options.length)#}
+                    for (var k = 0; k < temp.options.length; k++){
+
+                        {#console.log("开始配对")#}
+                        {#               console.log(temp.options[k].value)#}
+                        {#console.log(selectdata[1][i])#}
+                                        if (temp.options[k].value == selectdata[0][i]){
+                                            $("#drugline"+i.toString()).children(k).attr("selected");
+                                            form.render();
+                                    {#console.log("配对成功")#}
+                                    {#        console.log(temp)#}
+                                        temp.value=selectdata[0][i];
+
+                                        break;  }  }
+
+                }
+                form.render();
+
+            },
+
+            removeEmptyTableCache1: function(){
+                var oldData1 = table.cache[layTableId1];
+                console.log(111)
+                for(var i=0, row; i < oldData1.length; i++){
+                    row = oldData1[i];
+                    if(!row || !row.tempId){
+                        oldData1.splice(i, 1);
+                        console.log(selectdata[1])
+                        console.log(selectdata[1].splice(i, 1))
+                        console.log(selectdata[1])
+                        //删除一项
+                    }
+                    continue;
+                }
+                tableIns1.reload({
+                    data : oldData1
+                });
+
+                //将表格内的select id重赋值，将元素重赋值，并且将元素赋值
+
+                           //将表格内的select id重赋值，并且将元素赋值
+                var aa = (document.getElementById('tableRescheck')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[1]
+                    temp.id="checkline"+(i).toString()
+                    {#console.log(temp.options.length)#}
+                    for (var k = 0; k < temp.options.length; k++){
+
+                        {#console.log("开始配对")#}
+                        {#               console.log(temp.options[k].value)#}
+                        {#console.log(selectdata[1][i])#}
+                                        if (temp.options[k].value == selectdata[1][i]){
+                                            $("#checkline"+i.toString()).children(k).attr("selected");
+                                            form.render();
+                                    {#console.log("配对成功")#}
+                                    {#        console.log(temp)#}
+                                        temp.value=selectdata[1][i];
+
+                                        break;  }  }
+
+                }
+                {#console.log(selectdata[2])#}
+                form.render();
+            },
+
+            removeEmptyTableCache2: function(){
+                var oldData2 = table.cache[layTableId2];
+                console.log(111)
+                for(var i=0, row; i < oldData2.length; i++){
+                    row = oldData2[i];
+                    if(!row || !row.tempId){
+                        oldData2.splice(i, 1);
+                        console.log(selectdata[2])
+                        console.log(selectdata[2].splice(i, 1))
+                        console.log(selectdata[2])
+                        //删除一项
+                    }
+                    continue;
+                }
+                tableIns2.reload({
+                    data : oldData2
+                });
+
+                //将表格内的select id重赋值，将元素重赋值，并且将元素赋值
+                var aa = (document.getElementById('tableRestreat')).childNodes[2].childNodes[0].childNodes[1].childNodes[0].childNodes[0] //获得表格元素
+                var count=aa.childNodes.length
+                var temp
+                for(var i=0 ; i < count; i++){
+                    temp=aa.childNodes[i].childNodes[1].childNodes[0].childNodes[1]
+                    temp.id="checkline"+(i).toString()
+                    {#console.log(temp.options.length)#}
+                    for (var k = 0; k < temp.options.length; k++){
+
+                        {#console.log("开始配对")#}
+                        {#               console.log(temp.options[k].value)#}
+                        {#console.log(selectdata[2][i])#}
+                                        if (temp.options[k].value == selectdata[2][i]){
+                                            $("#checkline"+i.toString()).children(k).attr("selected");
+                                            form.render();
+                                    {#console.log("配对成功")#}
+                                    {#        console.log(temp)#}
+                                        temp.value=selectdata[2][i];
+
+                                        break;  }  }
+
+                }
+                {#console.log(selectdata[2])#}
+                form.render();
+            },
+
+            save: function(){
+                var oldData = table.cache[layTableId];
+                console.log(oldData);
+                document.getElementById("jsonResult").innerHTML = JSON.stringify(table.cache[layTableId], null, 2);	//使用JSON.stringify() 格式化输出JSON字符串
+            }
+        }
+
+        //激活事件
+        var activeByType = function (type, arg) {
+            if(arguments.length === 2){
+                active[type] ? active[type].call(this, arg) : '';
+            }else{
+                active[type] ? active[type].call(this) : '';
+            }
+        }
+
+        //注册按钮事件
+        $('.layui-btn[data-type]').on('click', function () {
+            var type = $(this).data('type');
+            activeByType(type);
+        });
+
+
+
+        //监听工具条，删除行按钮
+        table.on('tool(dataTable)', function (obj) {
+            var data = obj.data, event = obj.event, tr = obj.tr; //获得当前行 tr 的DOM对象;
+            console.log(data);
+            switch(event){
+                case "del":
+                    layer.confirm('真的删除行么？', function(index){
+                        obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                        layer.close(index);
+                        activeByType('removeEmptyTableCache');
+                    });
+                    break;
+
+            }
+        });
+
+         table.on('tool(checkTable)', function (obj) {
+            var data = obj.data, event = obj.event, tr = obj.tr; //获得当前行 tr 的DOM对象;
+            console.log(data);
+            switch(event){
+
+                case "del1":
+                    console.log(222)
+                    layer.confirm('真的删除行么？', function(index){
+                        obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                        layer.close(index);
+                        activeByType('removeEmptyTableCache1');
+                    });
+                    break;
+
+            }
+        });
+                //监听工具条，删除行按钮
+        table.on('tool(treatTable)', function (obj) {
+            var data = obj.data, event = obj.event, tr = obj.tr; //获得当前行 tr 的DOM对象;
+            console.log(data);
+            switch(event){
+
+                case "del2":
+                    console.log(222)
+                    layer.confirm('真的删除行么？', function(index){
+                        obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                        layer.close(index);
+                        activeByType('removeEmptyTableCache2');
+                    });
+                    break;
+
+            }
+        });
+
+        function update(str) {
+            $(str).find("")
+        }
+
+           //写监听函数
+    form.on('select(change)', function(data){
+       id=data.elem.getAttribute("id") //得到select原始DOM对象
+        id=parseInt(id.slice(8))
+        console.log(data.value)
+        console.log(selectdata[0])
+       value=data.value; //得到被选中的值
+       selectdata[0][id]=value
+        console.log(selectdata[0])
+    });
+
+            form.on('select(change1)', function(data){
+       id=data.elem.getAttribute("id") //得到select原始DOM对象
+        id=parseInt(id.slice(9))
+       value=data.value; //得到被选中的值
+       selectdata[1][id]=value
+    });
+
+                form.on('select(change2)', function(data){
+       id=data.elem.getAttribute("id") //得到select原始DOM对象
+        id=parseInt(id.slice(9))
+       value=data.value; //得到被选中的值
+       selectdata[2][id]=value
+    });
+        
+    })
+
+
+
+    // 对newdate获得的当前日期更改格式
+    function GetDateStr(AddDayCount) {
+        var dd = new Date();
+        dd.setDate(dd.getDate()+AddDayCount);//获取AddDayCount天后的日期
+        var y = dd.getFullYear();
+        var m = (dd.getMonth()+1)<10?"0"+(dd.getMonth()+1):(dd.getMonth()+1);//获取当前月份的日期，不足10补0
+        var d = dd.getDate()<10?"0"+dd.getDate():dd.getDate();//获取当前几号，不足10补0
+        return y+"-"+m+"-"+d;
+    }
+
+    //有关药单的初始化数据
+    var dataor = {
+        tbData: [{
+            tempId: new Date().valueOf(),
+            name: '请输入药名',
+        }],
+    };
+
+        var dataor1 = {
+        tbData: [{
+            tempId: new Date().valueOf(),
+            name: '请输入药名',
+        }],
+    };
+
+            var dataor2 = {
+        tbData: [{
+            tempId: new Date().valueOf(),
+            name: '请输入药名',
+        }],
+    };
+
+    
+            
+</script>
+
+</body>
+</html>

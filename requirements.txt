@@ -1,0 +1,15 @@
+Cython==0.29.10
+pyOpenSSL==19.0.0
+brotli==1.0.7
+cryptography==2.7
+Django==2.2.2
+protobuf==3.8.0
+ipaddr==2.2.0
+lxml==4.3.4
+mock==3.0.5
+numpy==1.16.4
+ordereddict==1.1
+pymysql==0.9.3
+simplejson==3.16.0
+usercustomize==1.0.0
+wincertstore==0.2

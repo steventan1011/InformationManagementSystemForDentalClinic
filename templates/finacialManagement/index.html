@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>缴费处</title>
+  <meta name="renderer" content="webkit">
+  <style type="text/css">
+    body {
+      zoom: 0.95;
+    }
+  </style>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <link rel="stylesheet" href="/static/layui/css/layui.css">
+  <link rel="stylesheet" href="/static/layui/style/admin.css" media="all">
+</head>
+
+<body class="layui-layout-body">
+  <div id="LAY_app">
+    <div class="layui-layout layui-layout-admin">
+      <div class="layui-header">
+        <!--右侧功能栏-->
+        <ul class="layui-nav layui-layout-right" lay-filter="layadmin-layout-right">
+          <!--个人信息部分                -->
+          <li class="layui-nav-item">
+            <a id="userChineseName">
+              <img src="http://t.cn/RCzsdCq" class="layui-nav-img">
+              {{userChineseName}}
+            </a>
+            <div id="username" hidden>{{username}}</div>
+            <!-- <dl class="layui-nav-child">
+                            <dd><a data-id="4" data-title="个人信息" data-url="userManage" class="site-demo-active"
+                                    data-type="tabAdd">个人信息</a></dd>
+                            <dd><a href="">安全设置</a></dd>
+                        </dl> -->
+          </li>
+
+          <li class="layui-nav-item" id="layerDemo" style="margin-bottom: 0;">
+            <form action="/login/" method="post" onsubmit="return submit_sure()">
+              <button name="quit" class="layui-btn" type="submit">安全退出</button>
+            </form>
+            <!-- <a href="javascript:void(0);" onclick="logout()">安全退出</a> -->
+          </li>
+
+          <!--侧面信息板-->
+          <li class="layui-nav-item layui-hide-xs" lay-unselect="">
+            <a layadmin-event="about"><i class="layui-icon layui-icon-more-vertical"></i></a>
+          </li>
+          <li class="layui-nav-item layui-show-xs-inline-block layui-hide-sm" lay-unselect="">
+            <a layadmin-event="more"><i class="layui-icon layui-icon-more-vertical"></i></a>
+          </li>
+          <span class="layui-nav-bar" style="left: 65.5px; top: 48px; width: 0px; opacity: 0;"></span>
+        </ul>
+      </div>
+
+      <!-- 侧边菜单 -->
+      <div class="layui-side layui-side-menu">
+        <div class="layui-side-scroll">
+
+          <!--标题logo处-->
+          <div class="layui-logo">
+            <span>欢迎进入个人信息系统</span>
+          </div>
+
+          <!--菜单栏列表-->
+          <ul class="layui-nav layui-nav-tree" lay-shrink="all" id="LAY-system-side-menu"
+            lay-filter="layadmin-system-side-menu">
+
+            <li class="layui-nav-item">
+              <a data-id="1" data-title="缴费管理" data-url="pay" class="site-demo-active" data-type="tabAdd">缴费管理<i
+                  class="layui-icon layui-icon-senior"></i></a>
+            </li>
+
+            <li data-name="get" class="layui-nav-item">
+              <a data-id="2" data-title="个人信息" data-url="HrForMF" class="site-demo-active" data-type="tabAdd">个人信息
+                <i class="layui-icon layui-icon-set"></i>
+              </a>
+            </li>
+            <span class="layui-nav-bar" style="top: 28px; height: 0px; opacity: 0;"></span>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 主体内容 -->
+      <!--tab标签-->
+      <div class="layui-tab" lay-filter="demo" lay-allowclose="true"
+        style="margin-left: 225px;margin-top:50px;margin-bottom: 0px">
+        <ul class="layui-tab-title"></ul>
+        <div class="layui-tab-content"></div>
+      </div>
+
+
+    </div>
+    <div class="layui-footer" style="text-align:center;">
+      <!-- 底部固定区域 -->
+      © 160821牙科门诊管理信息系统
+    </div>
+  </div>
+
+  <script src="/static/layui/layui.js"></script>
+  <script>
+    function submit_sure(){
+    var gnl=confirm("确定要安全退出?");
+    if (gnl==true){
+    return true;
+    }else{
+    return false;
+    }
+    }
+
+    
+    function logout() {
+      layui.use(['layer'], function () {
+        var layer = layui.layer;
+        var $ = layui.$;
+
+        var gnl = false;
+        layer.confirm("确定要安全退出?", {
+          icon: 3,
+          title: '提示'
+        }, function (index) {
+          gnl = true;
+          $.ajax({
+            type: 'post',
+            data: {
+              "status": gnl
+            },
+            dataType: 'json',
+            url: 'api/logout',
+            success: function (res) {
+              console.log(res);
+              layer.close(index);
+            },
+            error: function (res) {
+              layer.msg("请再尝试一次！");
+            }
+          });
+        });
+        if (gnl) {
+          return true;
+        } else {
+          return false;
+        }
+      });
+    }
+
+    layui.use(['element', 'form', 'layer'], function () {
+      var element = layui.element; //导航的hover效果、二级菜单等功能，需要依赖element模块
+      var form = layui.form;
+      //监听导航点击
+      element.on('nav(demo)', function (elem) {
+        //console.log(elem)
+        layer.msg(elem.text());
+      });
+
+
+      // var layer = layui.layer;
+      var $ = layui.$;
+      // 配置tab实践在下面无法获取到菜单元素
+      $('.site-demo-active').on('click', function () {
+        var dataid = $(this);
+        //这时会判断右侧.layui-tab-title属性下的有lay-id属性的li的数目，即已经打开的tab项数目
+        if ($(".layui-tab-title li[lay-id]").length <= 0) {
+          //如果比零小，则直接打开新的tab项
+          active.tabAdd(dataid.attr("data-url"), dataid.attr("data-id"), dataid.attr(
+            "data-title"));
+        } else {
+          //否则判断该tab项是否以及存在
+          var isData = false; //初始化一个标志，为false说明未打开该tab项 为true则说明已有
+          $.each($(".layui-tab-title li[lay-id]"), function () {
+            //如果点击左侧菜单栏所传入的id 在右侧tab项中的lay-id属性可以找到，则说明该tab项已经打开
+            if ($(this).attr("lay-id") == dataid.attr("data-id")) {
+              isData = true;
+            }
+          });
+          if (isData == false) {
+            //标志为false 新增一个tab项
+            active.tabAdd(dataid.attr("data-url"), dataid.attr("data-id"), dataid.attr(
+              "data-title"));
+          }
+        }
+        //最后不管是否新增tab，最后都转到要打开的选项页面上
+        active.tabChange(dataid.attr("data-id"));
+      });
+
+      var active = {
+        //在这里给active绑定几项事件，后面可通过active调用这些事件
+        tabAdd: function (url, id, name) {
+          //新增一个Tab项 传入三个参数，分别对应其标题，tab页面的地址，还有一个规定的id，是标签中data-id的属性值
+          //关于tabAdd的方法所传入的参数可看layui的开发文档中基础方法部分
+          element.tabAdd('demo', {
+            title: name,
+            content: '<iframe data-frameid="' + id +
+              '" scrolling="auto" frameborder="0" src="' + url +
+              '" style="width:100%;height:100%;border:none;margin:0;vertical-align:top;"></iframe>',
+            id: id //规定好的id
+          });
+          FrameWH(); //计算iframe层的大小
+        },
+        tabChange: function (id) {
+          //切换到指定Tab项
+          element.tabChange('demo', id); //根据传入的id传入到指定的tab项
+        },
+        tabDelete: function (id) {
+          element.tabDelete("demo", id); //删除
+        }
+      };
+
+      function FrameWH() {
+        var h = $(window).height();
+        $("iframe").css("height", h + "px");
+        console.log($("iframe").css("height", h + "px"));
+      }
+    });
+  </script>
+
+  <style id="LAY_layadmin_theme">
+    .layui-side-menu,
+    .layadmin-pagetabs .layui-tab-title li:after,
+    .layadmin-pagetabs .layui-tab-title li.layui-this:after,
+    .layui-layer-admin .layui-layer-title,
+    .layadmin-side-shrink .layui-side-menu .layui-nav>.layui-nav-item>.layui-nav-child {
+      background-color: #3A3D49 !important;
+    }
+
+    .layui-nav-tree .layui-this,
+    .layui-nav-tree .layui-this>a,
+    .layui-nav-tree .layui-nav-child dd.layui-this,
+    .layui-nav-tree .layui-nav-child dd.layui-this a {
+      background-color: #5FB878 !important;
+    }
+
+    .layui-layout-admin .layui-logo {
+      background-color: #2F9688 !important;
+    }
+  </style>
+</body>
+
+</html>

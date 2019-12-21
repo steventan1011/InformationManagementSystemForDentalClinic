@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加急诊记录</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+    <style>
+
+.layui-table-cell {
+	height: auto;
+}
+    </style>
+
+</head>
+<body>
+<form class="layui-form" action="" lay-filter="default">
+    <div class="layui-form-item">
+        <label class="layui-form-label">挂号号码</label>
+        <div class="layui-input-block">
+            <input type="tel" name="patientid"  autocomplete="off" class="layui-input" style="width: 100px" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">诊断日期</label>
+        <div class="layui-input-block">
+            <input type="text" name="date"   id="date" lay-verify="date"  style="width: 100px" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+</form>
+
+<form class="layui-form" action="" lay-filter="add">
+
+        <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">检查结果</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body layui-text">
+                <div id="toolbar">
+                    <div>
+                        <button type="button" class="layui-btn layui-btn-sm" data-type="addRow1" title="添加一行">
+                            <i class="layui-icon layui-icon-add-1"></i> 添加一行
+                        </button>
+                    </div>
+                </div>
+                <div id="tableRes" class="table-overlay">
+                    <table id="checkTable" lay-filter="checkTable" class="layui-hide"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">检查结果</label>
+        <div class="layui-input-block">
+            <textarea name="result" placeholder="请输入内容" class="layui-textarea"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">诊断意见</label>
+        <div class="layui-input-block">
+            <textarea name="suggest" placeholder="请输入内容" class="layui-textarea"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">治疗建议</label>
+        <div class="layui-input-block">
+            <textarea name="treat" placeholder="请输入内容" class="layui-textarea"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否建议复查</label>
+        <div class="layui-input-block">
+            <input type="radio" name="check" value="yes" title="是" checked="">
+            <input type="radio" name="check" value="no" title="否">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">治疗项</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body layui-text">
+                <div id="toolbar">
+                    <div>
+                        <button type="button" class="layui-btn layui-btn-sm" data-type="addRow2" title="添加一行">
+                            <i class="layui-icon layui-icon-add-1"></i> 添加一行
+                        </button>
+                    </div>
+                </div>
+                <div id="tableRes" class="table-overlay">
+                    <table id="treatTable" lay-filter="treatTable" class="layui-hide"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">处方药单</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body layui-text">
+                <div id="toolbar">
+                    <div>
+                        <button type="button" class="layui-btn layui-btn-sm" data-type="addRow" title="添加一行">
+                            <i class="layui-icon layui-icon-add-1"></i> 添加一行
+                        </button>
+                    </div>
+                </div>
+                <div id="tableRes" class="table-overlay">
+                    <table id="dataTable" lay-filter="dataTable" class="layui-hide"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-filter="btnSubmit" lay-submit>立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+<script type="text/html" id="selectcheck" >
+	<select  name='jtcyGxmc' lay-verify='' lay-search=''>
+        <option value=""></option>
+        <option value="父子">父子</option>
+        <option value="母子">母子</option>
+    </select>
+</script>
+
+<script type="text/html" id="selecttreat" >
+	<select  name='jtcyGxmc' lay-verify='' lay-search=''>
+        <option value=""></option>
+        <option value="父子">父子</option>
+        <option value="母子">母子</option>
+    </select>
+</script>
+
+<script type="text/html" id="selectcheck" >
+	<select  name='jtcycheck' lay-verify='' lay-search=''>
+        <option value=""></option>
+        <option value="父子">父子</option>
+        <option value="母子">母子</option>
+    </select>
+</script>
+
+<script type="text/html" id="selecttreat" >
+	<select  name='jtcytreat' lay-verify='' lay-search=''>
+        <option value=""></option>
+        <option value="父子">父子1</option>
+        <option value="母子">母子1</option>
+    </select>
+</script>
+
+<script type="text/html" id="selectdrug" >
+	<select  name='jtcydrug' lay-verify='' lay-search=''>
+        <option value=""></option>
+        <option value="父子">父子2</option>
+        <option value="母子">母子2</option>
+    </select>
+</script>
+
+<script src="/static/layui/layui.js"></script>
+<script>
+    // 从父页面获取病人信息和医生信息
+    var patientid = parent.patientid;
+    var doctor = parent.doctor;
+    //函数获取诊室信息
+    var room=function(){};
+    layui.use(['form',"element","table"], function() {
+        var form = layui.form;
+        var layer2 = layui.layer;
+        var $ = layui.jquery;
+        var table=layui.table //药单表格
+
+        form.render();
+
+        // 表单默认信息初始化
+        form.val("default", {
+            "patientid": patientid
+            ,"date": GetDateStr(0)
+        })
+
+
+// 提交按钮，生成数据:读取表单数据，读取表格数据，并转化成数组
+        form.on('submit(btnSubmit)', function (data) {
+            //表单数据formData
+            var formData = data.field;//表单数据
+            var drugData = table.cache[layTableId];//药单表数据
+            var checkData = table.cache[layTableId1];
+            var treatData = table.cache[layTableId2];
+
+            formData["drug"]=JSON.stringify(drugData);
+            formData["treatitem"]=JSON.stringify(treatData);
+            formData["checkitem"]=JSON.stringify(checkData);
+
+            //把数组转化成字符串输出
+            formData["patientid"]=patientid;
+
+            console.log(formData);
+            console.log(formData["patientid"])
+            console.log(formData["date"])
+
+            $.ajax({
+                type:'post',
+                url:'api/updaterecord',
+                data:formData,
+                dataType:'json',
+                success:function (res) {
+                    if (res["status"]==200){
+                        layer.msg("成功")
+                    }
+                },
+                error:function () {
+                    alert("异步加载失败！")
+                }
+            })
+            //生成总体数据的函数，将表单数据和其他合并
+
+        });
+
+
+
+        //数据表格实例化
+        var tbWidth = $("#tableRes").width();
+        var layTableId = "layTable";
+        var layTableId1 = "layTable1";
+        var layTableId2 = "layTable2";
+
+        //表格渲染
+        var tableIns = table.render({
+            elem: '#dataTable',
+            id: layTableId,
+            data: dataor.tbData,
+            width: tbWidth,
+            loading: true,
+            limit: 100, //每页默认显示的数量
+            even: false, //不开启隔行背景
+            cols: [[
+                {title: '序号', type: 'numbers'},
+                {field:'name',title:'药名',edit:'text'},
+                {field: 'number', title: '数量', edit: 'text'},
+                {field: 'tempId', title: '操作', templet: function(d){
+                        return '<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del" lay-id="'+ d.tempId +'"><i class="layui-icon layui-icon-delete"></i>移除</a>';
+                    }}
+            ]],
+
+        });
+
+        //检查项表格渲染
+        var tableIns1 = table.render({
+            elem: '#checkTable',
+            id: layTableId1,
+            data: dataor1.tbData,
+            width: tbWidth,
+            loading: true,
+            limit: 100, //每页默认显示的数量
+            even: false, //不开启隔行背景
+            cols: [[
+                {title: '序号', type: 'numbers'},
+                {field:'name',title:'检查名',edit:'text'},
+                {field: 'inner', title: '检查结果', edit: 'text'},
+                {field: 'tempId', title: '操作', templet: function(d){
+                        return '<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del" lay-id="'+ d.tempId +'"><i class="layui-icon layui-icon-delete"></i>移除</a>';
+                    }},
+            ]]
+
+                                ,done: function(res, curr, count){
+              //数据渲染完的回调。
+              //由于layui 设置了超出隐藏，所以这里改变下，以兼容操作按钮的下拉菜单
+              $(".layui-table-body, .layui-table-box, .layui-table-cell").css('overflow', 'visible');
+             }
+
+        });
+
+        //治疗项表格渲染
+        var tableIns2 = table.render({
+            elem: '#treatTable',
+            id: layTableId2,
+            data: dataor2.tbData,
+            width: tbWidth,
+            loading: true,
+            limit: 100, //每页默认显示的数量
+            even: false, //不开启隔行背景
+            cols: [[
+                {title: '序号', type: 'numbers'},
+                {field:'name',title:'治疗名',edit:'text'},
+                {field: 'tempId', title: '操作', templet: function(d){
+                        return '<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del" lay-id="'+ d.tempId +'"><i class="layui-icon layui-icon-delete"></i>移除</a>';
+                    }},
+
+            ]]
+
+
+
+        });
+
+        //定义事件集合
+        var active = {
+            addRow: function(){	//添加一行
+                var oldData = table.cache[layTableId];
+                var newRow = {tempId: new Date().valueOf()};
+                oldData.push(newRow);
+                tableIns.reload({
+                    data : oldData
+                });
+            },
+            addRow1: function(){	//添加一行
+                var oldData1 = table.cache[layTableId1];
+                var newRow1 = {tempId: new Date().valueOf()};
+                oldData1.push(newRow1);
+                tableIns1.reload({
+                    data : oldData1
+                });
+            },
+            addRow2: function(){	//添加一行
+                var oldData2 = table.cache[layTableId2];
+                var newRow2 = {tempId: new Date().valueOf()};
+                console.log(table.cache)
+                oldData2.push(newRow2);
+                tableIns2.reload({
+                    data : oldData2
+                });
+            },
+            updateRow: function(obj){
+                var oldData = table.cache[layTableId];
+                console.log(oldData);
+                for(var i=0, row; i < oldData.length; i++){
+                    row = oldData[i];
+                    if(row.tempId == obj.tempId){
+                        $.extend(oldData[i], obj);
+                        return;
+                    }
+                }
+                tableIns.reload({
+                    data : oldData
+                });
+            },
+            removeEmptyTableCache: function(){
+                var oldData = table.cache[layTableId];
+                for(var i=0, row; i < oldData.length; i++){
+                    row = oldData[i];
+                    if(!row || !row.tempId){
+                        oldData.splice(i, 1);    //删除一项
+                    }
+                    continue;
+                }
+                tableIns.reload({
+                    data : oldData
+                });
+            },
+
+            save: function(){
+                var oldData = table.cache[layTableId];
+                console.log(oldData);
+                document.getElementById("jsonResult").innerHTML = JSON.stringify(table.cache[layTableId], null, 2);	//使用JSON.stringify() 格式化输出JSON字符串
+            }
+        }
+
+        //激活事件
+        var activeByType = function (type, arg) {
+            if(arguments.length === 2){
+                active[type] ? active[type].call(this, arg) : '';
+            }else{
+                active[type] ? active[type].call(this) : '';
+            }
+        }
+
+        //注册按钮事件
+        $('.layui-btn[data-type]').on('click', function () {
+            var type = $(this).data('type');
+            activeByType(type);
+        });
+
+
+
+        //监听工具条，删除行按钮
+        table.on('tool(dataTable)', function (obj) {
+            var data = obj.data, event = obj.event, tr = obj.tr; //获得当前行 tr 的DOM对象;
+            console.log(data);
+            switch(event){
+                case "del":
+                    layer.confirm('真的删除行么？', function(index){
+                        obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                        layer.close(index);
+                        activeByType('removeEmptyTableCache');
+                    });
+                    break;
+            }
+        });
+    })
+
+    // 对newdate获得的当前日期更改格式
+    function GetDateStr(AddDayCount) {
+        var dd = new Date();
+        dd.setDate(dd.getDate()+AddDayCount);//获取AddDayCount天后的日期
+        var y = dd.getFullYear();
+        var m = (dd.getMonth()+1)<10?"0"+(dd.getMonth()+1):(dd.getMonth()+1);//获取当前月份的日期，不足10补0
+        var d = dd.getDate()<10?"0"+dd.getDate():dd.getDate();//获取当前几号，不足10补0
+        return y+"-"+m+"-"+d;
+    }
+
+    //有关药单的初始化数据
+    var dataor = {
+        tbData: [{
+            tempId: new Date().valueOf(),
+            name: '请输入药名',
+        }],
+    };
+
+        var dataor1 = {
+        tbData: [{
+            tempId: new Date().valueOf(),
+            name: '请输入检查名',
+        }],
+    };
+
+            var dataor2 = {
+        tbData: [{
+            tempId: new Date().valueOf(),
+            name: '请输入治疗名',
+        }],
+    };
+
+</script>
+
+</body>
+</html>

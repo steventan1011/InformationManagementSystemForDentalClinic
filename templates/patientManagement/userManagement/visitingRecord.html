@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html xmlns:>
+
+<head>
+    <meta charset="utf-8">
+    <title>用户就诊记录</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+</head>
+
+<body>
+    <!-- 搜索框 -->
+    <form action="" class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">就诊日期：</label>
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <input class="layui-input" name="date" id="dateChoice">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <button class="layui-btn" lay-submit lay-filter="search">搜索</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- 数据表 -->
+    <table id="visitingRecord" lay-filter="operation"></table>
+    <!-- 列工具条 -->
+    <script type="text/html" id="detailedReport">
+        <button class="layui-btn layui-btn-sm" lay-event="getDetailedReport">详细诊断报告</button>
+    </script>
+    <script type="text/html" id="detailedMedicine">
+        <button class="layui-btn layui-btn-sm" lay-event="getDetailedMedicine">详细药单</button>
+    </script>
+    <script type="text/html" id="detailedTreat">
+        <button class="layui-btn layui-btn-sm" lay-event="getDetailedTreat">治疗项</button>
+    </script>
+    <script type="text/html" id="detailedCheck">
+        <button class="layui-btn layui-btn-sm" lay-event="getDetailedCheck">检查项</button>
+    </script>
+
+
+    <!-- 详细诊断结果 -->
+    <div class="" id="detailedDiagnosis" style="display:none;">
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md7">
+                <div class="layui-card">
+
+                    <ul class="layui-timeline">
+                        <li class="layui-timeline-item">
+                            <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+                            <div class="layui-timeline-content layui-text">
+                                <h3 class="layui-timeline-title">主诉</h3>
+                                <p>
+                                    <input type="text" id="description" autocomplete="off" class="layui-input"
+                                        readonly="true" disabled value="1111">
+                                </p>
+                            </div>
+                        </li>
+                        <li class="layui-timeline-item">
+                            <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+                            <div class="layui-timeline-content layui-text">
+                                <h3 class="layui-timeline-title">检查结果</h3>
+                                <p>
+                                    <input type="text" id="diagnosis" autocomplete="off" class="layui-input"
+                                        readonly="true" disabled value="1111">
+                                </p>
+                            </div>
+                        </li>
+                        <li class="layui-timeline-item">
+                            <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+                            <div class="layui-timeline-content layui-text">
+                                <h3 class="layui-timeline-title">诊断建议</h3>
+                                <p>
+                                    <input type="text" id="result" autocomplete="off" class="layui-input"
+                                        readonly="true" disabled value="1111">
+                                </p>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <!--                    <fieldset class="layui-elem-field">-->
+                    <!--                        <legend>主诉</legend>-->
+                    <!--                    </fieldset>-->
+                    <!--                    <input type="text" id="des"  autocomplete="off" class="layui-input"-->
+                    <!--                           readonly="true" disabled value="1111">-->
+                    <!--                    <table id="detailedCheck"></table>-->
+                    <!--                    <fieldset class="layui-elem-field">-->
+                    <!--                        <legend>检查结果</legend>-->
+                    <!--                    </fieldset>-->
+                    <!--                    <input type="text" id="dia"  autocomplete="off" class="layui-input"-->
+                    <!--                           readonly="true" disabled value="1111">-->
+                    <!--                    <fieldset class="layui-elem-field">-->
+                    <!--                        <legend>诊断意见</legend>-->
+                    <!--                    </fieldset>-->
+                    <!--                    <input type="text" id="res"  autocomplete="off" class="layui-input"-->
+                    <!--                           readonly="true" disabled value="1111">-->
+                </div>
+            </div>
+
+            <div class="layui-col-md5">
+                <div class="layui-card">
+                    <ul class="layui-timeline">
+                        <li class="layui-timeline-item">
+                            <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+                            <div class="layui-timeline-content layui-text">
+                                <div class="layui-timeline-title">治疗意见</div>
+                                <input type="text" id="treatment" autocomplete="off" class="layui-input" readonly="true"
+                                    disabled value="1111">
+                            </div>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+    </div>
+
+    <!-- 详细药单 -->
+    <div class="" id="detailedDrug" style="display:none;">
+        <fieldset class="layui-elem-field">
+            <legend>详细药单</legend>
+        </fieldset>
+        <table id="detailedDrugtable"></table>
+    </div>
+
+    <!-- 详细治疗项单 -->
+    <div class="" id="detailedtreat1" style="display:none;">
+        <fieldset class="layui-elem-field">
+            <legend>治疗项单</legend>
+        </fieldset>
+        <table id="detailedtreattable"></table>
+    </div>
+
+    <!-- 详细检查项单 -->
+    <div class="" id="detailedcheck1" style="display:none;">
+        <fieldset class="layui-elem-field">
+            <legend>检查单</legend>
+        </fieldset>
+        <table id="detailedchecktable"></table>
+    </div>
+    <script src="/static/layui/layui.js"></script>
+
+    <script>
+        layui.use(['table', 'form', 'layer', 'laydate'], function () {
+            var user = parent.window.document.getElementById("username").innerText.trim();
+            var table = layui.table;
+            var form = layui.form;
+            var $ = layui.$;
+            var layer = layui.layer;
+            var laydate = layui.laydate;
+
+            // 数据表格缓存
+            var tableCache = null;
+
+            // 实例化日期选择器
+            laydate.render({
+                elem: '#dateChoice',
+                type: 'date',
+                position: 'fixed',
+                range: true
+            });
+
+            // 表格渲染
+            table.render({
+                elem: '#visitingRecord',
+                height: 500,
+                // data: tableCache,
+                page: true, //开启分页
+                limit: 30,
+                cellMinWidth: 80,
+                cols: [
+                    [ //表头
+                        {
+                            field: 'date',
+                            title: '就诊日期'
+                        }, {
+                            field: 'no.',
+                            title: '挂号号码',
+                        }, {
+                            field: 'doctor',
+                            title: '主治医师',
+                        }, {
+                            field: 'room',
+                            title: '就诊诊室',
+                        }, {
+                            field: 'description',
+                            title: '主诉',
+                        }, {
+                            field: 'diagnosis',
+                            title: '检查结果',
+                        }, {
+                            field: "result",
+                            title: "诊断意见",
+                        }, {
+                            field: "treatment",
+                            title: "治疗建议",
+                        }, {
+                            field: "later",
+                            title: "复诊提示",
+                        }, {
+                            field: "total_price",
+                            title: "缴费总价",
+                        }, {
+                            fixed: 'right',
+                            toolbar: '#detailedReport'
+                        }, {
+                            fixed: 'right',
+                            toolbar: '#detailedMedicine'
+                        }, {
+                            fixed: 'right',
+                            toolbar: '#detailedTreat'
+                        }, {
+                            fixed: 'right',
+                            toolbar: '#detailedCheck'
+                        }
+                    ]
+                ]
+
+            });
+
+            // 首先进行搜索
+            form.on('submit(search)', function (data) {
+                var index = layer.load();
+                var k = {};
+                startAll = data.field["date"].split(" - ")[0];
+                endAll = data.field["date"].split(" - ")[1];
+                startYear = startAll.split("-")[0];
+                startMonth = startAll.split("-")[1];
+                startDay = startAll.split("-")[2];
+                endYear = endAll.split("-")[0];
+                endMonth = endAll.split("-")[1];
+                endDay = endAll.split("-")[2];
+                k["startdate"] = startAll;
+                k["enddate"] = endAll;
+                k["startYear"] = startYear;
+                k["startMonth"] = startMonth;
+                k["startDay"] = startDay;
+                k["endYear"] = endYear;
+                k["endMonth"] = endMonth;
+                k["endDay"] = endDay;
+                k["userAccount"] = user;
+                // 异步获取数据
+                $.ajax({
+                    type: "get",
+                    url: 'api/getTherapy',
+                    data: k,
+                    dataType: "json",
+                    success: function (res) {
+                        layer.close(index);
+                        if (res["status"] == 101) {
+                            layer.msg("您输入的日期过早！");
+                        }
+                        if (res["status"] == 110) {
+                            layer.msg("您输入的是未来时间！");
+                        } else {
+                            tableCache = res["data"];
+                            // 表格渲染
+                            console.log(tableCache)
+                            table.reload('visitingRecord', {
+                                data: tableCache
+                            });
+                        }
+                    },
+                    error: function () {
+                        layer.close(index);
+                        layer.msg("未请求到数据！");
+                    }
+                });
+
+                return false;
+            });
+
+            table.on('tool(operation)', function (obj) {
+                switch (obj.event) {
+                    // 展示详细诊断报告
+                    // 展示详细诊断报告
+                    case 'getDetailedReport': //先获得该条记录对应id等，再搜索返回相关记录
+                        // console.log(tableCache);
+                        // $.ajax({
+                        // type: "get",
+                        // data: {
+                        //     "date": obj.data["date"],
+                        //     "no.": obj.data["no."]
+                        // },
+                        // success: function (res) {
+                        var data = obj.data;
+                        console.log(obj.data)
+                        var index = layer.open({
+                            type: 1,
+                            title: "详细诊疗信息",
+                            content: $("#detailedDiagnosis"),
+                            maxmin: true,
+                            area: '500px',
+                            success: function (layero, index) {
+                                layer.full(index);
+                                console.log(tableCache)
+                                // 渲染检查结果表格，应当展示其所做的多项检查
+                                var more = ["description", "diagnosis", "result",
+                                    "treatment"
+                                ];
+                                for (var i = 0; i < more.length; i++) {
+                                    console.log(data[more[i]])
+                                    document.getElementById(more[i]).setAttribute('value',
+                                        data[more[i]])
+                                }
+                                // 渲染诊断结果表格，应当展示其所做的最终诊断结果
+                                table.render({
+                                    elem: '#detailedDiagonsis',
+                                    height: 300,
+                                    page: true, //开启分页
+                                    limit: 30,
+                                    cellMinWidth: 80,
+                                    data: tableCache,
+                                    cols: [
+                                        [ //表头
+                                            {
+                                                field: 'date',
+                                                title: '就诊日期',
+                                                width: 80
+                                            }, {
+                                                field: 'doctor',
+                                                title: '主治医师',
+                                                width: 80
+
+                                            }, {
+                                                field: 'room',
+                                                title: '就诊诊室',
+                                                width: 80
+
+                                            }, {
+                                                field: 'diagnosis',
+                                                title: '诊断结果',
+                                            }, {
+                                                field: 'other_prescription',
+                                                title: '处方',
+                                            }
+                                        ]
+                                    ]
+                                });
+                            },
+                            end: function () {
+                                layer.closeAll();
+                            }
+                        });
+                        break;
+
+
+                        // 展示详细药单
+                    case 'getDetailedMedicine':
+                        var loadIndex = layer.load();
+                        var data = obj.data;
+                        console.log(obj.data)
+
+                        $.ajax({
+                            type: "get",
+                            data: data,
+                            url: 'api/getDetailBill',
+                            dataType: 'json',
+                            success: function (res) {
+                                layer.close(loadIndex);
+                                var drugCache = res["data"];
+                                for (var i in drugCache) {
+                                    drugCache[i]["totalPrice"] = drugCache[i]["quantity"] *
+                                        drugCache[i]["price"];
+                                }
+                                // console.log(drugCache);
+                                var index = layer.open({
+                                    type: 1,
+                                    title: "详细药单信息",
+                                    content: $("#detailedDrug"),
+                                    maxmin: true,
+                                    area: '500px',
+                                    success: function (layero, index) {
+                                        layer.full(index);
+
+                                        // 渲染药单表格，应当展示其所做的多项检查
+                                        table.render({
+                                            elem: '#detailedDrugtable',
+                                            height: 300,
+                                            // data: tableCache,
+                                            page: true, //开启分页
+                                            limit: 30,
+                                            data: drugCache,
+                                            // cellMinWidth: 80,
+                                            cols: [
+                                                [ //表头
+                                                    {
+                                                        field: 'drugName',
+                                                        title: '药物名'
+                                                    }, {
+                                                        field: 'specification',
+                                                        title: '规格',
+                                                    }, {
+                                                        field: 'quantity',
+                                                        title: '数量',
+                                                    }, {
+                                                        field: 'price',
+                                                        title: '单价',
+                                                    }, {
+                                                        field: 'totalPrice',
+                                                        title: '该项总价'
+                                                    }
+                                                ]
+                                            ]
+                                        });
+                                    },
+
+                                    end: function () {
+                                        layer.closeAll();
+                                    }
+
+                                });
+                            },
+
+                            error: function () {
+                                
+                                layer.msg("数据获取失败！");
+                            }
+                        });
+                        break;
+
+                        // 展示详细治疗项
+                    case 'getDetailedTreat':
+                        console.log(777)
+                        var loadIndex = layer.load();
+                        var data = obj.data;
+
+                        $.ajax({
+                            type: "get",
+                            data: data,
+                            url: 'api/getDetailTreat',
+                            dataType: 'json',
+                            success: function (res) {
+                                layer.close(loadIndex);
+                                var treatCache = res["data"];
+                                for (var i in treatCache) {
+                                    treatCache[i]["totalPrice"] = treatCache[i][
+                                        "quantity"] *
+                                        treatCache[i]["price"];
+                                }
+                                // console.log(drugCache);
+                                var index = layer.open({
+                                    type: 1,
+                                    title: "详细治疗信息",
+                                    content: $("#detailedtreat1"),
+                                    maxmin: true,
+                                    area: '500px',
+                                    success: function (layero, index) {
+                                        layer.full(index);
+
+                                        // 渲染药单表格，应当展示其所做的多项检查
+                                        table.render({
+                                            elem: '#detailedtreattable',
+                                            height: 300,
+                                            // data: tableCache,
+                                            page: true, //开启分页
+                                            limit: 30,
+                                            data: treatCache,
+                                            // cellMinWidth: 80,
+                                            cols: [
+                                                [ //表头
+                                                    {
+                                                        field: 'treatName',
+                                                        title: '治疗项名'
+                                                    }, {
+                                                        field: 'quantity',
+                                                        title: '数量',
+                                                    }, {
+                                                        field: 'price',
+                                                        title: '单价',
+                                                    }, {
+                                                        field: 'totalPrice',
+                                                        title: '该项总价'
+                                                    }
+                                                ]
+                                            ]
+                                        });
+                                    },
+
+                                    end: function () {
+                                        layer.closeAll();
+                                    }
+
+                                });
+                            },
+
+                            error: function () {
+                                layer.msg("数据获取失败！");
+                            }
+                        });
+                        break;
+
+                        // 展示详细检查项项
+                    case 'getDetailedCheck':
+                        console.log(777)
+                        var loadIndex = layer.load();
+                        var data = obj.data;
+
+                        $.ajax({
+                            type: "get",
+                            data: data,
+                            url: 'api/getDetailCheck',
+                            dataType: 'json',
+                            success: function (res) {
+                                layer.close(loadIndex);
+                                var checkCache = res["data"];
+                                for (var i in checkCache) {
+                                    checkCache[i]["totalPrice"] = checkCache[i][
+                                        "quantity"] *
+                                        checkCache[i]["price"];
+                                }
+                                // console.log(drugCache);
+                                var index = layer.open({
+                                    type: 1,
+                                    title: "详细检查信息",
+                                    content: $("#detailedcheck1"),
+                                    maxmin: true,
+                                    area: '500px',
+                                    success: function (layero, index) {
+                                        layer.full(index);
+
+                                        // 渲染药单表格，应当展示其所做的多项检查
+                                        table.render({
+                                            elem: '#detailedchecktable',
+                                            height: 300,
+                                            // data: tableCache,
+                                            page: true, //开启分页
+                                            limit: 30,
+                                            data: checkCache,
+                                            // cellMinWidth: 80,
+                                            cols: [
+                                                [ //表头
+                                                    {
+                                                        field: 'checkName',
+                                                        title: '检查项名'
+                                                    }, {
+                                                        field: 'quantity',
+                                                        title: '数量',
+                                                    }, {
+                                                        field: 'price',
+                                                        title: '单价',
+                                                    }, {
+                                                        field: 'totalPrice',
+                                                        title: '该项总价'
+                                                    }
+                                                ]
+                                            ]
+                                        });
+                                    },
+
+                                    end: function () {
+                                        layer.closeAll();
+                                    }
+
+                                });
+                            },
+
+                            error: function () {
+                                layer.msg("数据获取失败！");
+                            }
+                        });
+                        break;
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

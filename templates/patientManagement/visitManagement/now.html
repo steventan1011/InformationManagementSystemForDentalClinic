@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>用户就诊信息</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/layui/style/admin.css" media="all">
+</head>
+
+<body>
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md8">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    <a class="layui-a-tips" id="refresh">全部更新</a>
+                </div>
+                <div class="layui-card-body">
+                    <div class="layui-row layui-col-space10" id="inner">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/layui/layui.js"></script>
+    <script>
+        // 从父页面获取病人信息和医生信息
+
+        //函数获取诊室信息
+        var room = function () {}
+        layui.use(['form', "element", "table"], function () {
+            var form = layui.form;
+            var layer2 = layui.layer;
+            var $ = layui.jquery;
+            var table = layui.table;
+            var username = window.parent.document.getElementById("username").innerText;
+            form.render();
+
+            now_date = new Date().toLocaleDateString();
+            var dateFormat = function (now_date) {
+                if (now_date.charAt(6) === '/') {
+                    s_date = now_date.split("/");
+                    s_date[1] = "0" + s_date[1];
+                    now_date = s_date.join("-");
+                } else {
+                    now_date.replace(/\//g, "-")
+                }
+                return now_date;
+            }
+            now_date = dateFormat(now_date);
+            console.log(now_date);
+
+            function refresh() {
+                $.ajax({
+                    type: "get",
+                    url: 'api/getToday', //获得数据，并为接下来赋值提供帮助
+                    data: {
+                        "date": now_date,
+                        "username": username
+                    },
+                    dataType: "json",
+                    success: function (res) {
+                        document.getElementById("inner").innerHTML = ""; //清空卡片
+                        var data = res["data"][0];
+                        data["numlist"] = 20;
+                        console.log(data);
+                        var count = data.length;
+                        if (count == 0) {
+                            document.getElementById('inner').innerHTML =
+                                "                     <div>\n" +
+                                "                        当前暂无就诊信息，若有需要请及时挂号就医，北航医院祝您健康\n" +
+                                "                    </div>";
+                        } else {
+
+                            document.getElementById('inner').innerHTML =
+                                "           <form class=\"layui-form\" action=\"\" lay-filter=\"default\">\n" +
+                                "                        <fieldset class=\"layui-elem-field layui-field-title\" style=\"margin-top: 0px;\">\n" +
+                                "                            <legend>预约信息</legend>\n" +
+                                "                        </fieldset>\n" +
+                                "\n" +
+                                "                        <div class=\"layui-form-item\">\n" +
+                                "                            <label class=\"layui-form-label\">就诊日期</label>\n" +
+                                "                            <div class=\"layui-input-block\">\n" +
+                                "                                <input type=\"tel\" name=\"date\"  lay-verify=\"date\" autocomplete=\"off\" class=\"layui-input\" style=\"width: 100px\" disabled>\n" +
+                                "                            </div>\n" +
+                                "                        </div>\n" +
+                                "                        <div class=\"layui-form-item\">\n" +
+                                "                            <label class=\"layui-form-label\">挂号号码</label>\n" +
+                                "                            <div class=\"layui-input-block\">\n" +
+                                "                                <input type=\"text\" name=\"num\"     style=\"width: 100px\"  autocomplete=\"off\" class=\"layui-input\" disabled>\n" +
+                                "                            </div>\n" +
+                                "                        </div>\n" +
+                                "                        <div class=\"layui-form-item\">\n" +
+                                "                            <label class=\"layui-form-label\">当前排队人数</label>\n" +
+                                "                            <div class=\"layui-input-block\">\n" +
+                                "                                <input type=\"text\" name=\"numlist\"      style=\"width: 100px\"  autocomplete=\"off\" class=\"layui-input\" disabled>\n" +
+                                "                            </div>\n" +
+                                "                        </div>\n" +
+                                "\n" +
+                                "                        <fieldset class=\"layui-elem-field layui-field-title\" style=\"margin-top: 0px;\">\n" +
+                                "                            <legend>诊室信息</legend>\n" +
+                                "                        </fieldset>\n" +
+                                "                        <!--    诊室信息-->\n" +
+                                "                        <div class=\"layui-form-item layui-form-text\">\n" +
+                                "\n" +
+                                "                            <div class=\"layui-inline\">\n" +
+                                "                                <label class=\"layui-form-label\">就诊医室</label>\n" +
+                                "                                <div class=\"layui-input-inline\">\n" +
+                                "                                    <input type=\"text\" name=\"room\"  autocomplete=\"off\" class=\"layui-input\" disabled>\n" +
+                                "                                </div>\n" +
+                                "                            </div>\n" +
+                                "                            <div class=\"layui-inline\">\n" +
+                                "                                <label class=\"layui-form-label\">科室细分名称</label>\n" +
+                                "                                <div class=\"layui-input-inline\">\n" +
+                                "                                    <input type=\"text\" name=\"detroom\" lay-verify=\"required|phone\" autocomplete=\"off\" class=\"layui-input\" disabled>\n" +
+                                "                                </div>\n" +
+                                "                            </div>\n" +
+                                "                            <div class=\"layui-inline\">\n" +
+                                "                                <label class=\"layui-form-label\">诊室位置</label>\n" +
+                                "                                <div class=\"layui-input-inline\">\n" +
+                                "                                    <input type=\"text\" name=\"place\"  autocomplete=\"off\" class=\"layui-input\" disabled>\n" +
+                                "                                </div>\n" +
+                                "                            </div>\n" +
+                                "                        </div>\n" +
+                                "\n" +
+                                "                        <div class=\"layui-form-item layui-form-text\">\n" +
+                                "                            <div class=\"layui-inline\">\n" +
+                                "                                <label class=\"layui-form-label\">诊疗医生</label>\n" +
+                                "                                <div class=\"layui-input-inline\">\n" +
+                                "                                    <input type=\"text\" name=\"doctor\"  autocomplete=\"off\" class=\"layui-input\" disabled>\n" +
+                                "                                </div>\n" +
+                                "                            </div>\n" +
+                                "                            <div class=\"layui-inline\">\n" +
+                                "                                <label class=\"layui-form-label\">就诊状态</label>\n" +
+                                "                                <div class=\"layui-input-inline\">\n" +
+                                "                                    <input type=\"text\" name=\"state\"  autocomplete=\"off\" class=\"layui-input\" disabled>\n" +
+                                "                                </div>\n" +
+                                "                            </div>\n" +
+                                "                        </div>\n" +
+                                "                    </form>";
+
+                            // 表单默认信息初始化
+                            form.val("default", {
+                                "date": data["date"],
+                                "num": data["num"],
+                                "room": data["room"],
+                                "detroom": data["detroom"],
+                                "place": data["place"],
+                                "doctor": data["doctor"],
+                                "state": data["state"],
+                                "numlist": data["numlist"]
+
+                            })
+                            layer.msg("刷新成功");
+                        }
+                    },
+                    error: function () {
+                        layer.msg("未请求到数据！");
+                    }
+                });
+            }
+
+            refresh();
+
+            $(document).on('click', '#refresh', function () {
+                console.log(111)
+                refresh()
+            });
+
+
+
+        })
+    </script>
+
+</body>
+
+</html>

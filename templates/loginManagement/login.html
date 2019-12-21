@@ -1,0 +1,108 @@
+{#/templates/loginManagement/loggin.html#}
+ 
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户登录-牙科门诊管理信息系统-DentistMIS 5.1</title>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <link rel="shortcut icon" href="../../favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="../../static/layui_login/css/font.css">
+    <link rel="stylesheet" href="../../static/layui_login/css/weadmin.css">
+    <link rel="stylesheet" href="../../static/layui_login/css/layui.css">
+    <script src="../../static/layui/layui.all.js" charset="utf-8"></script>
+
+</head>
+<body class="login-bg">
+    
+    <div class="login">
+        <div class="message">牙科门诊管理信息系统 5.1-登录</div>
+        <div id="darkbannerwrap"></div>
+        
+        <form action="/login/" method="post" class="layui-form" >
+<!--             {% if message %}
+                <div class="alert alert-warning">{{ message }}</div>
+            {% endif %} -->
+
+            {% csrf_token %}
+            <input type="text" id="phone" name="phone" placeholder="请输入手机号" required="" lay-verify="phone" autocomplete="off" class="layui-input">
+            <!-- <input name="phone" placeholder="手机号"  type="text" lay-verify="required" class="layui-input" > -->
+            <hr class="hr15">
+            <input name="password" lay-verify="required" placeholder="请输入密码"  type="password" class="layui-input">
+            <hr class="hr15">
+            <input class="loginin" name="login" value="登录" lay-submit lay-filter="login" style="width:100%;" type="submit">
+            <hr class="layui-bg-cyan">
+            <hr class="hr5" >
+
+            <p ><a href="/register/" class="fl">没有账号？立即注册</a><a href="javascript:;" class="fr" >忘记密码？</a></p>
+            <!-- <input  name="register" value="注册"  style="width:100%;" type="submit" > -->
+            <hr class="hr20" >
+            <div>
+            </div>
+        </form>
+      <div class="layui-footer" style="text-align:center;">
+        <!-- 底部固定区域 -->
+        © 160821牙科门诊管理信息系统
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+            console.log('{{ message_origin }}');
+
+            if ("{{ message_origin }}" != ""){
+                layer.msg('{{ message_origin }}',{icon:2});
+            }
+
+            if ("{{ message_out }}" != ""){
+                layer.msg('{{ message_out }}',{icon:1});
+            }
+
+            if ("{{ message }}" != ""){
+                layer.msg('{{ message }}',{icon:2});
+            }
+
+    </script>   
+
+
+    <!-- <script type="text/javascript">
+            layui.extend({
+                admin: '{/}./static/js/admin'
+            });
+            layui.use(['form','admin'], function(){
+              var form = layui.form
+                ,admin = layui.admin;
+              // layer.msg('玩命加载中', function(){
+              //   //关闭后的操作
+              //   });
+              //监听提交
+              form.on('submit(login)', function(data){
+                // alert(888)
+                layer.msg(JSON.stringify(data.field),function(){
+                    location.href='./index.html'
+                });
+                return false;
+              });
+            });   
+    </script>  
+
+
+
+    {% if message %}
+        <script type="text/javascript">
+            layui.use('layer', function(){
+                var layer = layui.layer;
+  
+                layer.msg('hello');
+            });              
+        
+        </script>       
+    {% endif %} -->
+
+    <!-- 底部结束 -->
+</body>
+</html>

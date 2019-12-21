@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>主页</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/layui/style/admin.css" media="all">
+
+</head>
+<body>
+<div class="layui-row layui-col-space15">
+<div class="layui-col-md8">
+    <div class="layui-card">
+        <div class="layui-card-header">
+            诊中患者
+            <a lay-href="https://www.layui.com/doc/base/changelog.html" class="layui-a-tips" id="refersh">全部更新</a>
+        </div>
+        <div class="layui-card-body">
+            <div class="layui-row layui-col-space10" id="memberlist">
+
+
+
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="layui-col-md4">
+    <div class="layui-card">
+        <div class="layui-card-header">当前状态</div>
+        <div class="layui-card-body">
+
+            <form class="layui-form" action="" lay-filter="default">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">医生：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="doctor"  autocomplete="off" class="layui-input" style="width: 100px" disabled>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">诊室：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="room"    style="width: 100px"  autocomplete="off" class="layui-input" disabled>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">当前诊中人数</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="counttotal"  id="counttotal"  autocomplete="off" class="layui-input" disabled>
+                        </div>
+                    </div>
+                </div>
+                <button  class="layui-btn layui-btn-radius layui-btn-danger"  id="next" style="margin-left: 120px">叫号下一位
+                    <i class="layui-icon" style="font-size: 30px;">
+                        &#xe63d;
+                    </i>
+                </button>
+
+
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/static/layui/layui.js"></script>
+<script>
+    var room =" room";
+    var doctor = "YS001";
+    //函数获取诊室信息
+    var count=function(){}
+    layui.use(['form',"element","table"], function() {
+        var form = layui.form;
+        var layer2 = layui.layer;
+        var $ = layui.jquery;
+        var table = layui.table;
+        form.render();
+        // 表单默认信息初始化
+
+        openmes=function(element) {
+        var patent_id=element.parentNode.childNodes[5].innerText; //获取患者id
+            console.log(patent_id);
+        if ($(".layui-tab-title li[lay-id]",parent.document).length <= 0)
+        {
+            parent.layui.element.tabAdd('demo', {
+                            title: '患者'+patent_id,
+                            content: '<iframe name='+patent_id+' src="patientInfo" frameborder="0" style="width: 100%;height: 750px"></iframe>',
+                            id: patent_id});
+        }else {
+            var isData = false;
+            $.each($(".layui-tab-title li[lay-id]",parent.document), function () {
+                    //如果点击左侧菜单栏所传入的id 在右侧tab项中的lay-id属性可以找到，则说明该tab项已经打开
+                console.log($(this).attr("lay-id"))
+                    if ($(this).attr("lay-id") == patent_id) {
+                        isData = true;
+                    }
+                });
+            if (isData == false) {
+                //标志为false 新增一个tab项
+                parent.layui.element.tabAdd('demo', {
+                            title: patent_id,
+                            content: '<iframe name='+patent_id+' src="patientInfo" frameborder="0" style="width: 100%;height: 750px"></iframe>',
+                            id: patent_id});
+            }
+        }
+            parent.layui.element.tabChange('demo', patent_id);
+                };
+
+        document.getElementById('next').onclick=function () {
+            //添加新病人操作
+            $.ajax({
+                type:'get',
+                url:'api/addpatient',
+                data:{"doctor":doctor},
+                datatype:'json',
+                success:function (res) {
+                    if(res["status"]==110){alert("队列中无病人或医生不空闲！")}
+                    else{layer.msg("插入成功！")}
+                },
+                error:function () {
+                    layer.msg("出错！")
+                }
+            })
+        };
+
+        function open() {
+        }
+
+        //结束治疗按钮
+        finish = function(element){
+            //先获取挂号号码
+            var tmp = element.id.substr(6);
+            var id = "id"+tmp;
+            var patientid = document.getElementById(id).innerText;
+            $.ajax({
+                type:'post',
+                url:'api/finish',
+                data:{"patientid":patientid,"doctor":doctor},
+                datatype:'json',
+                success:function (res) {
+                    if (res["status"]==200){
+                        alert("处理成功！")
+                        parent.layui.element.tabDelete('demo', patientid)
+                    }else{
+                        layer.msg("失败！")
+                    }
+                },
+                error:function () {
+                    layer.msg('错误！')
+                }
+
+             });
+            refresh()
+        };
+
+        function refresh(){
+            $.ajax({//刷新操作
+                type:'get',
+                url:'api/getQueue',
+                data:{"doctor":doctor},
+                datatype:'json',
+                success:function (res) {
+                    document.getElementById("memberlist").innerHTML="";//清空卡片
+                    var data=res["data"];
+                    count=data.length;//右边信息重赋值
+                    document.getElementsByName("doctor")[0].setAttribute("value",doctor);
+                    document.getElementsByName("room")[0].setAttribute("value",room);
+                    document.getElementById('counttotal').value=count+"人"
+                    for(var k=0;k<data.length;k++){//先添加卡片格
+                        temp=k+1;
+                        temp=temp.toString();
+                        $("#memberlist").append("                <div class=\"layui-col-xs12 layui-col-sm4\">\n" +
+                            "                    <div class=\"layuiadmin-card-text\">\n" +
+                            "                        <div class=\"layui-text-top\"><i class=\"layui-icon layui-icon-face-smile\" id=\"name\"></i><a id=\'name" +temp+
+                            "\'></a></div>\n" +
+                            "                        <p class=\"layui-text-center\" id=\"state" +temp+
+                            "\"></p>\n" +
+                            "                        <p class=\"layui-text-bottom\">\n" +
+                            "                            <button  class=\"layui-btn layui-btn-xs layui-btn-radius layui-btn-warm\" onclick=\"openmes(this)\"   name=\"open\" id=\'open"+temp+
+                            "\'> 打开档案 </button>\n" +
+                            "                            <button  class=\"layui-btn layui-btn-xs layui-btn-radius layui-btn-danger\" onclick=\"finish(this)\" name=\"finish\" id=\'finish"+temp+
+                            "\'> 结束治疗 </button>\n" +
+                            "                            <span id=\"id" +temp+
+                            "\"></span>\n" +
+                            "                        </p>\n" +
+                            "                    </div>\n" +
+                            "                </div>");
+                        document.getElementById('name'+temp).innerHTML=(data[k])["name"];
+                        document.getElementById('state'+temp).innerHTML="当前状态："+(data[k])["state"];
+                        document.getElementById('id'+temp).innerHTML=(data[k])["id"];
+                    }
+                    form.render();
+                    layer.msg("刷新成功");
+                },
+
+                error:function () {
+                    layer.msg("查找不到数据");
+                }
+            });
+        }
+
+        $.ajax({//刷新操作
+                type:'get',
+                url:'api/getQueue',
+                data:{"doctor":doctor},
+                datatype:'json',
+                success:function (res) {
+                    document.getElementById("memberlist").innerHTML="";//清空卡片
+                    var data=res["data"];
+                    count=data.length;//右边信息重赋值
+                    document.getElementsByName("doctor")[0].setAttribute("value",doctor);
+                    document.getElementsByName("room")[0].setAttribute("value",room);
+                    document.getElementById('counttotal').value=count+"人"
+                    for(var k=0;k<data.length;k++){//先添加卡片格
+                        temp=k+1;
+                        temp=temp.toString();
+                        $("#memberlist").append("                <div class=\"layui-col-xs12 layui-col-sm4\">\n" +
+                            "                    <div class=\"layuiadmin-card-text\">\n" +
+                            "                        <div class=\"layui-text-top\"><i class=\"layui-icon layui-icon-face-smile\" id=\"name\"></i><a id=\'name" +temp+
+                            "\'></a></div>\n" +
+                            "                        <p class=\"layui-text-center\" id=\"state" +temp+
+                            "\"></p>\n" +
+                            "                        <p class=\"layui-text-bottom\">\n" +
+                            "                            <button  class=\"layui-btn layui-btn-xs layui-btn-radius layui-btn-warm\" onclick=\"openmes(this)\"   name=\"open\" id=\'open"+temp+
+                            "\'> 打开档案 </button>\n" +
+                            "                            <button  class=\"layui-btn layui-btn-xs layui-btn-radius layui-btn-danger\" onclick=\"finish(this)\" name=\"finish\" id=\'finish"+temp+
+                            "\'> 结束治疗 </button>\n" +
+                            "                            <span id=\"id" +temp+
+                            "\"></span>\n" +
+                            "                        </p>\n" +
+                            "                    </div>\n" +
+                            "                </div>");
+                        document.getElementById('name'+temp).innerHTML=(data[k])["name"];
+                        document.getElementById('state'+temp).innerHTML="当前状态："+(data[k])["state"];
+                        document.getElementById('id'+temp).innerHTML=(data[k])["id"];
+                    }
+                    form.render();
+                    layer.msg("刷新成功");
+                },
+
+                error:function () {
+                    layer.msg("查找不到数据");
+                }
+            });
+
+        $(document).on('click','#finish',function() {
+            open()
+         });
+
+        $(document).on('click','#refersh',function() {
+           refresh()
+         });
+    })
+
+</script>
+
+</body>
+</html>

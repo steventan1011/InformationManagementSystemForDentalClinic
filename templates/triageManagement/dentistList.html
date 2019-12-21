@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>主页</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/layui/style/admin.css" media="all">
+
+</head>
+<body>
+<p>
+    &nbsp
+</p>
+<div class="layui-row layui-col-space15">
+    <div class="layui-col-md8" >
+        <div class="layui-card" >
+            <div class="layui-card-header">查看医生挂号队列<a  class="layui-a-tips" id="refersh">全部更新</a>
+            </div>
+            <div class="layui-card-body" id="doctorlist">
+                <!--                内放卡片-->
+                <!--                    每一块为一个大诊室-->
+
+
+
+            </div>
+
+        </div>
+    </div>
+    <div class="layui-col-md3">
+    <div class="layui-card">
+        <div class="layui-card-header">
+            添加排队患者
+                </div>
+        <div class="layui-card-body">
+            <div class="layui-card-body">
+                <form action="" class="layui-form">
+                    <div class="layui-form-item">
+                        <div class="layui-inline" style="width: 120px">
+                            <div class="layui-input-inline" >
+                                <input class="layui-input" placeholder="请输入挂号号码" name="patientid" id="id" style="width: 120px">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="search">搜索</button>
+                            <button class="layui-btn" lay-submit lay-filter="reflash">恢复队列</button>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="layui-row layui-col-space15">
+
+    </div>
+</div>
+<p>
+  &nbsp
+</p><p>
+  &nbsp
+</p><p>
+  &nbsp
+</p><p>
+  &nbsp
+</p><p>
+  &nbsp
+</p><p>
+  &nbsp
+</p>
+<script src="/static/layui/layui.js"></script>
+<script>
+
+    //全局变量，便于子页面取值
+    var doctor_id = null;
+    var doctor_name = null;
+    //函数获取诊室信息
+    layui.use(['form',"element","table"], function() {
+        var form = layui.form;
+        var layer2 = layui.layer;
+        var $ = layui.jquery;
+        var table = layui.table;
+
+
+        //打开某个医生的排队队列
+        openqueue = function (element) {
+            //获取医生id和姓名
+            doctor_id = element.id;
+            doctor_name = element.parentNode.parentNode.childNodes[1].innerText
+            layer.open({
+                type: 2 //此处以iframe举例
+                , title: doctor_name+'医生的队列'
+                , area: ['1000px', '800px']
+                , shade: 0
+                , maxmin: true
+                ,offset: 'auto'
+                , content: 'triage'
+                , btn: ['全部关闭'] //只是为了演示
+                , yes: function () {
+                    layer.closeAll();
+                }
+                , zIndex: layer.zIndex //重点1
+                , success: function (layero) {
+                    layer.setTop(layero); //重点2
+                }
+            });
+        }
+
+        //刷新函数
+        function refresh(){
+            $.ajax({//每次打开网页都要刷新一遍，包括表格和卡片
+                type:'get',
+                url:'api/getlist',
+                datatype:'json',
+                success:function (res) {
+                    document.getElementById("doctorlist").innerHTML="";//清空卡片
+                    var data=res["data"]; //读取数据
+                    for(var k=0;k<data.length;k++){ //先添加卡片格
+                        temp=k+1;
+                        temp=temp.toString();
+                        //先读入，大的科室框
+                        $("#doctorlist").append("               <fieldset class=\"layui-elem-field layui-field-title\">\n" +
+                            "                    <legend id=\"type"+temp+"\"" +
+                            "></legend>\n" +
+                            "                    <div class=\"layui-row layui-col-space10\" id=\"inner"+temp+"\""+">\n" +
+                            "                    </div>\n" +
+                            "                </fieldset>");
+                        document.getElementById('type'+temp).innerHTML=(data[k])["type"];
+                        for(var n=0;n<data[k]["list"].length;n++){
+                            temp1=n+1
+                            temp1=temp1.toString()
+                            $("#inner"+temp).append("                        <div class=\"layui-col-xs12 layui-col-sm3\">\n" +
+                                "                            <div class=\"layuiadmin-card-text\">\n" +
+                                "                                <div class=\"layui-text-top\"><i class=\"layui-icon layui-icon-face-smile\"></i><a id=\"name"+temp+"-"+temp1+"\"></a></div>\n" +
+                                "                                <p  id=\"pro"+temp+"-"+temp1+"\"></p>\n" +
+                                "                                <p  id=\"detroom"+temp+"-"+temp1+"\"></p>\n" +
+                                "                                <p  id=\"room"+temp+"-"+temp1+"\"></p>\n" +
+                                "                                <p class=\"layui-text-bottom\">\n" +
+                                "                                    <button class=\"layui-btn layui-btn-xs layui-btn-radius layui-btn-danger\" onclick=\"openqueue(this)\"  id="+(((data[k])["list"])[n])["id"]+" name=\"open"+temp+"-"+temp1+"\"> 打开挂号队列 </button>\n" +
+                                "                                </p>\n" +
+                                "                            </div>\n" +
+                                "                        </div>");
+                            document.getElementById('name'+temp+"-"+temp1)  .innerHTML=(((data[k])["list"])[n])["name"];
+                            document.getElementById('pro'+temp+"-"+temp1).innerHTML="职称:  "+(((data[k])["list"])[n])["pro"];
+                            document.getElementById('detroom'+temp+"-"+temp1).innerHTML="科室细分：  "+(((data[k])["list"])[n])["detroom"];
+                            document.getElementById('room'+temp+"-"+temp1).innerHTML="诊室房间：  "+(((data[k])["list"])[n])["room"];
+                        }
+
+                    }
+                    layer.msg("刷新成功");
+                },
+
+                error:function () {
+                    layer.msg("查找不到数据");
+                }
+            });
+        }
+
+        //表示每次打开页面都异步加载一次，刷新页面
+        $.ajax({//每次打开网页都要刷新一遍，包括表格和卡片
+                type:'get',
+                url:'api/getlist',
+                datatype:'json',
+                success:function (res) {
+                    document.getElementById("doctorlist").innerHTML="";//清空卡片
+                    var data=res["data"] //读取数据
+                    for(var k=0;k<data.length;k++){ //先添加卡片格
+                        temp=k+1;
+                        temp=temp.toString();
+                        //先读入，大的科室框
+                        $("#doctorlist").append("               <fieldset class=\"layui-elem-field layui-field-title\">\n" +
+                            "                    <legend id=\"type"+temp+"\"" +
+                            "></legend>\n" +
+                            "                    <div class=\"layui-row layui-col-space10\" id=\"inner"+temp+"\""+">\n" +
+                            "                    </div>\n" +
+                            "                </fieldset>");
+                        document.getElementById('type'+temp).innerHTML=(data[k])["type"];
+                        for(var n=0;n<data[k]["list"].length;n++){
+                            temp1=n+1
+                            temp1=temp1.toString()
+                            $("#inner"+temp).append("                        <div class=\"layui-col-xs12 layui-col-sm3\">\n" +
+                                "                            <div class=\"layuiadmin-card-text\">\n" +
+                                "                                <div class=\"layui-text-top\"><i class=\"layui-icon layui-icon-face-smile\"></i><a id=\"name"+temp+"-"+temp1+"\"></a></div>\n" +
+                                "                                <p  id=\"pro"+temp+"-"+temp1+"\"></p>\n" +
+                                "                                <p  id=\"detroom"+temp+"-"+temp1+"\"></p>\n" +
+                                "                                <p  id=\"room"+temp+"-"+temp1+"\"></p>\n" +
+                                "                                <p class=\"layui-text-bottom\">\n" +
+                                "                                    <button class=\"layui-btn layui-btn-xs layui-btn-radius layui-btn-danger\" onclick=\"openqueue(this)\"  id="+(((data[k])["list"])[n])["id"]+" name=\"open"+temp+"-"+temp1+"\"> 打开挂号队列 </button>\n" +
+                                "                                </p>\n" +
+                                "                            </div>\n" +
+                                "                        </div>");
+                            document.getElementById('name'+temp+"-"+temp1)  .innerHTML=(((data[k])["list"])[n])["name"];
+                            document.getElementById('pro'+temp+"-"+temp1).innerHTML="职称:  "+(((data[k])["list"])[n])["pro"];
+                            document.getElementById('detroom'+temp+"-"+temp1).innerHTML="科室细分：  "+(((data[k])["list"])[n])["detroom"];
+                            document.getElementById('room'+temp+"-"+temp1).innerHTML="诊室房间：  "+(((data[k])["list"])[n])["room"];
+                        }
+
+                    }
+                    layer.msg("刷新成功");
+                },
+
+                error:function () {
+                    layer.msg("查找不到数据");
+                }
+            });
+
+        //手动刷新
+        $(document).on('click','#refersh',function() {
+           refresh()
+        });
+
+        //添加新病人
+        form.on("submit(search)",function (data) {
+            var getdata = data.field;
+            //获取新号加入队列中
+            $.ajax({
+                  type: 'get',
+                  url: 'api/addinq',
+                  data:getdata,
+                  datatype: 'json',
+                  success:function (res) {
+                      if(res["status"]==110){alert("不符合加入队列的条件！")}
+                      else{layer.msg("添加成功！")}
+                      },
+                    error: function () {layer.msg("查找不到数据");}
+              });
+        });
+        //恢复队列
+        form.on("submit(reflash)",function (data) {
+            var getdata = data.field;
+            //获取新号加入队列中
+            $.ajax({
+                  type: 'get',
+                  url: 'api/initq',
+                  datatype: 'json',
+                  success:function (res) {
+                      if(res["status"]==200){layer.msg("恢复成功！")}
+                      else{alert("失败")}
+                      },
+                    error: function () {alert("查找不到数据");}
+              });
+        })
+    })
+
+</script>
+
+</body>
+</html>

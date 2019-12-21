@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>用户注册-牙科门诊管理信息系统-DentistMIS 5.1</title>
+    <link rel="shortcut icon" href="../../favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="../../static/layui_login/css/font.css">
+    <link rel="stylesheet" href="../../static/layui_login/css/weadmin.css">
+    <link rel="stylesheet" href="../../static/layui_login/css/layui.css">
+    
+</head>
+<body class="login-bg">
+    
+    <div class="login">
+        <div class="message">牙科门诊管理信息系统 5.1-注册</div>
+        <div id="darkbannerwrap"></div>
+        <form method="post" class="layui-form" >
+<!--             {% if message %}
+                <div class="alert alert-warning">{{ message }}</div>
+            {% endif %} -->
+
+            {% csrf_token %}
+            <input type="text" id="name" name="name" placeholder="请输入真实姓名" required="" lay-verify="required" autocomplete="off" class="layui-input">
+            <hr class="hr30">
+            <input type="text" id="phone" name="phone" placeholder="请输入手机号" required="" lay-verify="phone" autocomplete="off" class="layui-input">
+            <hr class="hr30">
+            <input type="text" id="L_email" name="email" placeholder="请输入邮箱" required="" lay-verify="email" autocomplete="off" class="layui-input">
+            <hr class="hr30">
+            <input type="password" id="L_pass" name="pass" placeholder="请输入密码（6-16个字符）" required="" lay-verify="pass" autocomplete="off" class="layui-input">
+            <hr class="hr30">
+            <input type="password" id="L_repass" name="repass" placeholder="请确认密码（6-16个字符）" required="" lay-verify="repass" autocomplete="off" class="layui-input">
+            <hr class="hr30">
+            
+            <!-- <button  class="layui-btn" lay-filter="add" lay-submit="">增加</button> -->
+            <button  name="register" class="layui-btn" lay-filter="add" lay-submit="" style="width:100%;">注册</button>
+            <!-- <input  name="register" value="注册"  style="width:100%;" type="submit" > -->
+
+            <hr class="layui-bg-cyan">
+            <hr class="hr5" >
+
+            <p><a href="/login/" class="fl">已有账号？立即登录</a><a href="javascript:;" class="fr">忘记密码？</a></p>
+        </form>
+      <hr class="hr30" >
+      <div class="layui-footer" style="text-align:center;">
+        <!-- 底部固定区域 -->
+        © 160821牙科门诊管理信息系统
+        </div>
+    </div>
+ 
+
+
+ 
+    <script src="../../static/layui/layui.all.js" charset="utf-8"></script>
+    <script type="text/javascript">
+      if ("{{ message }}" != ""){
+                layer.msg('{{ message }}',{icon:2});
+            }
+
+
+    layui.use(['form','layer'], function(){
+          var $ = layui.$
+          var form = layui.form,
+            layer = layui.layer;
+            form.render();
+          //自定义验证规则
+          form.verify({
+            pass: [/(.+){6,12}$/, '密码必须6到12位']
+            ,repass: function(value){
+
+                if(document.getElementById("L_pass").value != document.getElementById("L_repass").value){
+                    return '两次密码不一致';
+                
+                }
+            }
+          });
+
+          //监听提交
+          form.on('submit(add)', function(data){
+            $.ajax({
+               url:"/register/",
+               type:"POST",
+               data:{name:document.getElementById("name").value, phone:document.getElementById("phone").value, email:document.getElementById("L_email").value, password:document.getElementById("L_pass").value},
+               success:function(data){
+                   console.log(data)
+               }         　　　
+
+           })
+
+            console.log(data);
+            
+            return true;
+          });  
+
+       
+
+
+        });
+</script>
+</body>
+</html>

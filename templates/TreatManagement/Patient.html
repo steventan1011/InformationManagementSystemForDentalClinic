@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+    <style type="text/css">body {zoom:0.87;}</style>
+</head>
+<body class="layui-bg-gray">
+
+
+<blockquote class="layui-elem-quote">患者信息详情</blockquote>
+<div class="layui-fluid" style="overflow: hidden;">
+
+<!--    第一排卡片组-->
+    <div class="layui-row layui-col-space15">
+        <!--        第一个卡片  检查记录查看，点击查看出现弹窗-->
+        <div class="layui-col-md8">
+            <div class="layui-card">
+                <div class="layui-card-header">
+<!--                    标题-->
+                    就诊记录查询<i class="layui-icon layui-icon-list" style="font-size: 30px; color: #FF5722;"></i>
+<!--                    右侧刷新按钮-->
+                    <div class="layui-table-tool-self">
+                        <button class="layui-btn layui-btn-radius layui-btn-sm layui-bg-blue"  id="add" >新建就诊记录
+                            <i class="layui-icon" style="font-size: 30px; ">
+                                &#xe608;
+                            </i>
+                        </button>
+                        <button class="layui-btn layui-btn-radius layui-btn-sm layui-bg-blue"  id="refershlist2" >刷新
+                            <i class="layui-icon" style="font-size: 30px; ">
+                                &#xe6b2;
+                            </i>
+                        </button>
+                    </div>
+                </div>
+<!--                卡片内容主体：表格-->
+                <div class="layui-card-body">
+                    <table class="layui-table" lay-skin="line"  id="Treat"></table>
+                </div>
+            </div>
+        </div>
+<!--        //第二个卡片  预约信息查看//有详细基本信息按钮-弹窗-->
+        <div class="layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    个人信息<i class="layui-icon" style="font-size: 30px; color: #FF5722;">&#xe770;</i>
+                </div>
+                <div class="layui-card-body">
+                    <table id="ParentBaseMes" lay-filter="operation" lay-skin="row"></table>
+                </div>
+                <div class="layui-card-body">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!--    第二排卡片组-->
+
+
+
+
+</div>
+<script src="/static/layui/layui.js"></script>
+
+<!--列工具条1-->
+<script type="text/html" id="CheckbarDemo">
+    <a class="layui-btn  layui-btn-radius layui-btn-sm layui-bg-green" lay-event="getReport">查看详细报告</a>
+</script>
+
+<!-- 列工具条2 -->
+<!-- 列工具条 -->
+<script type="text/html" id="detailedReport">
+    <button class="layui-btn  layui-btn-radius layui-btn-sm layui-bg-green" lay-event="getDetailedReport">诊断报告</button>
+</script>
+<script type="text/html" id="detailedMedicine">
+    <button class="layui-btn  layui-btn-radius layui-btn-sm layui-bg-green" lay-event="getDetailedMedicine">详细药单</button>
+</script>
+
+<script>
+    var patientid = null;
+    layui.use(['table',"element"], function(){
+        var table=layui.table;
+        var table1 = layui.table;
+        var table3 = layui.table;
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        patientid = self.frameElement.getAttribute('name');
+
+
+        // 数据缓存
+        var tableCache = null;
+
+        //加载就诊记录表格数据
+        $.ajax({
+            type:"get",
+            url:"api/gettreat",
+            data:{"id":patientid},
+            dataType:'json',
+            success:function (res) {
+                var data = res["data"];
+                console.log(data);
+                table.reload('Treat',{data:data,limit:data.length});
+            },
+            error:function () {
+                alert("就诊记录异步加载失败！")
+            }
+        });
+
+        //加载患者基本信息表格数据
+        $.ajax({
+            type:"get",
+            url:"api/getpinfo",
+            data:{"id":patientid},
+            dataType:'json',
+            success:function (res) {
+                var data = res["data"];
+                console.log(data);
+                table.reload('ParentBaseMes',{data:data,limit:data.length});
+            },
+            error:function () {
+                alert("基本信息异步加载失败！")
+            }
+        });
+
+
+        table1.render({
+            elem: '#ParentBaseMes'
+            ,title:'用户数据表'
+            ,cols: [[ //表头
+                {field: 'key',  fixed: 'left'}
+                ,{field: 'value'}
+            ]]
+
+        });
+
+        //就诊记录数据表格
+        table3.render({
+            elem: '#Treat'
+            ,title: '用户数据表'
+            ,cols: [[
+                {field:'no.', title:'挂号号码',  fixed: 'left', unresize: true, sort: true}
+                ,{field:'date', title:'日期',  unresize: true, sort: true}
+                ,{field:'room', title:'就诊医室'}
+                ,{field:'doctor', title:'主治医师'}
+                ,{field: 'brief_dia', title: '检查结果',}
+                ,{field: "brief_res",title: "诊断意见",}
+                ,{ field: "later",title: "复诊意见",}
+                ,{fixed: 'right', title: "详细报告",toolbar: '#detailedReport'}
+                ,{fixed: 'right', title:"药单报告",toolbar: '#detailedMedicine'}
+            ]]
+            ,page: true
+        });
+
+
+        //刷新就诊记录按钮
+        $(document).on('click','#refershlist2',function(){
+            $.ajax({
+                type: "get",
+                url: 'api/gettreat',
+                data:{"id":patientid},
+                dataType: "json",
+                success: function (res) {
+                    tableCache = res["data"];
+                    // 表格重载
+                    table.reload('Treat', {
+                        data: tableCache,limit:tableCache.length
+                    });
+                    layer.msg("刷新成功");
+                },
+                error: function () {
+                    layer.msg("未请求到数据！");
+                }
+            });
+
+        });
+
+        //新建就诊记录
+        $(document).on('click','#add',function() {
+            var that = this;
+            //多窗口模式，层叠置顶
+            layer.open({
+                type: 2 //此处以iframe举例
+                , title: '新建就诊记录'
+                , area: ['1000px', '800px']
+                , shade: 0
+                , maxmin: true
+                ,offset: 'auto'
+                , content: 'add'
+                , btn: ['全部关闭'] //只是为了演示
+                , yes: function () {
+                    layer.closeAll();
+                }
+                , zIndex: layer.zIndex //重点1
+                , success: function (layero) {
+                    layer.setTop(layero); //重点2
+                }
+            });
+        })
+
+    })
+</script>
+</body>
+</html>

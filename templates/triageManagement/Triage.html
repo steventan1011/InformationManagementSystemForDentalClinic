@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <title>分诊台系统</title>
+  <style>
+    div#procession {
+      width: 180px;
+
+      margin: 10px 100px 10px 0px;
+      height: 480px;
+      background-color: #dadddd;
+      border: 0px;
+      overflow-y: auto;
+    }
+
+    div label {
+      font-size: 22px;
+      font-weight: bold;
+      width: 100%;
+      display: inline-block;
+      padding: 4px 0;
+      text-align: center;
+      margin: 0px 0 2px 0;
+      color: rgba(18, 18, 18, 0.97);
+      background-color: #c1b8b3;
+    }
+  </style>
+  <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+</head>
+
+<body>
+
+
+  <div style="padding: 20px; background-color: #F2F2F2;">
+    <div class="layui-row layui-col-space15">
+      <div class="layui-col-md6" style="width: 280px">
+        <div class="layui-card">
+          <div class="layui-card-header">排队队列</div>
+          <div class="layui-card-body">
+            <div id="procession"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-md6" style="width: 500px">
+        <div class="layui-card" style="width: 670px">
+          <div class="layui-card-header">卡片面板</div>
+          <div class="layui-card-body">
+            <table id="procession_table"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <script src="/static/layui/layui.js"></script>
+  <script>
+    
+    document.getElementById('procession').ondragover = function (ev) {
+      ev.preventDefault(); //阻止向上冒泡
+    };
+
+
+    layui.use(['layer', 'table'], function () {
+      var $ = layui.jquery;
+      var layer = layui.layer;
+      var table = layui.table;
+      //从父页面获取全局变量
+        var doctor_id = parent.doctor_id;
+        var doctor_name = parent.doctor_name;
+        console.log(doctor_id)
+      table.render({
+        elem: "#procession_table",
+        title: "队列",
+        cols: [
+          [{
+            field: 'id',
+            title: '号码',
+            width: 120,
+            fixed: 'left',
+            unresize: true
+          }, {
+            field: 'name',
+            title: '姓名',
+            width: 120
+          }, {
+            field: 'doctor',
+            title: '医生',
+            width: 120
+          }, {
+            field: 'section',
+            title: '科室',
+            width: 120
+          }, {
+            field: 'room',
+            title: '诊室',
+            width: 144
+          }]
+        ]
+      });
+
+        // 当打开网页时，刷新队列
+        $.ajax({
+                  type: 'get',
+                  url: 'api/reflashq',
+                  data:{doctor:doctor_id},
+                  datatype: 'json',
+                  success:function (res) {
+                      document.getElementById('procession').innerHTML = "";
+                      var data = res['data'];
+                      var tmp = [];
+                      for (var k=0;k<data.length;k++){
+                        console.log(data[k]['name']);
+                        var label = document.createElement('label'); //1、创建元素
+                        label.setAttribute('doctor_id', data[k]['doctor_id']);
+                        label.setAttribute('id', data[k]['id']);
+                        label.setAttribute('name', data[k]['name']);
+                        label.setAttribute('doctor', data[k]['doctor']);
+                        label.setAttribute('section', data[k]['section']);
+                        label.setAttribute('room', data[k]['room']);
+                        label.setAttribute('draggable', "true");
+                        label.ondragstart = function (ev) {
+                        //dataTransfer.setData() 方法设置被拖数据的数据类型和值
+                        ev.dataTransfer.setData("Text", this.id);
+                        };
+
+                        label.innerHTML = data[k]['id'] + ' | ' + data[k]['name'];
+                        var container = document.getElementById('procession'); //2、找到父级元素
+                        container.appendChild(label); //3、在末尾中添加元素
+                      }
+                      //ids表用于判断搜索的id是否已存在队列内
+                    table.reload('procession_table', {
+                            data: data,
+                            limit: data.length
+                            })
+
+                      },
+                    error: function () {layer.msg("查找不到数据");}
+              });
+
+        document.getElementById('procession').ondrop = function (ev) {
+            ev.preventDefault();
+            var id = ev.dataTransfer.getData('Text');
+            var elem = document.getElementById(id);
+            var toElem = ev.toElement.id;
+            if (toElem == 'procession') {
+              //如果为container,元素放置在末尾
+              this.appendChild(elem);
+            } else {
+              //如果为container里的元素，则插入该元素之前
+              this.insertBefore(elem, document.getElementById(toElem));
+            }
+
+            var container = document.getElementById("procession");
+            var labels = container.getElementsByTagName("label");
+            var list = [];
+            for (var i = 0; i < labels.length; i++) {
+              console.log(labels[i].textContent);
+              list.push({
+                  'doctor_id':labels[i].getAttribute('doctor_id'),
+                'id': labels[i].getAttribute('id'),
+                'name': labels[i].getAttribute('name'),
+                'doctor': labels[i].getAttribute('doctor'),
+                'room': labels[i].getAttribute('room'),
+                  'section': labels[i].getAttribute('section')
+              })
+            }
+            table.reload('procession_table', {
+              data: list,
+              limit: list.length
+            });
+            var postdata = {};
+            for (var i=0;i<list.length;i++){
+                postdata[i] = JSON.stringify(list[i]);
+            }
+            postdata["doctor"] = doctor_id
+            console.log(postdata);
+            $.ajax({
+                type: 'post',
+                url: 'api/adjustq',
+                data:postdata,
+                datatype: 'json',
+                success:function (res) {
+                    if (res["status"]==200){
+                        layer.msg("处理成功！")
+                    }else{
+                        alert("失败！");
+                        layer.closeAll()
+                    }
+                },
+                error:function () {
+                    layer.msg("异步加载失败！")
+                    layer.closeAll()
+                }
+            })
+
+          };
+
+
+
+    });
+  </script>
+</body>
+
+</html>

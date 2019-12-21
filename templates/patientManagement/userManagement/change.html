@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>修改个人信息</title>
+            <link rel="stylesheet" href="/static/layui/css/layui.css" media="all">
+        </head>
+<body>
+<form class="layui-form" action="" lay-filter="default">
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-inline">
+                <input type="text" id="input_name" name="input_name" autocomplete="off" class="layui-input" >
+            </div>
+            <label class="layui-form-label">性别</label>
+            <div class="layui-input-inline">
+                <input type="text" id="input_sex" name="input_sex"  lay-verify="required" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">生日</label>
+            <div class="layui-input-inline">
+                <input type="text" id="input_dateofbirth" name="input_dateofbirth" autocomplete="off" class="layui-input" >
+            </div>
+            <label class="layui-form-label">民族</label>
+            <div class="layui-input-inline">
+                <input type="text" id="input_nationality" name="input_nationality"  lay-verify="required" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">电话号码</label>
+        <div class="layui-input-inline">
+            <input type="text" id="input_tele" name="input_tele" lay-verify="required" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">住址</label>
+        <div class="layui-input-inline" style="width: 500px">
+            <input type="text" id="input_address" name="input_address" lay-verify="required" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-filter="btnSubmit" lay-submit>立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+<script src="/static/layui/layui.js"></script>
+<script>
+    // 从父页面获取病人信息和医生信息
+
+    var input_name=parent.input_name;
+    var input_sex=parent.input_sex;
+    var input_dateofbirth=parent.input_dateofbirth;
+    var input_nationality=parent.input_nationality;
+    var input_tele=parent.input_tele;
+    var input_address=parent.input_address;
+    var user=parent.user1;
+
+
+    //函数获取诊室信息
+    var room=function(){}
+    layui.use(['form',"element","table"], function() {
+        var form = layui.form;
+        var layer2 = layui.layer;
+        var $ = layui.jquery;
+        var table=layui.table
+        form.render();
+
+        // 表单默认信息初始化
+        form.val("default", {
+            "input_name":input_name,
+            "input_sex":input_sex,
+            "input_dateofbirth":input_dateofbirth,
+            "input_nationality":input_nationality,
+            "input_tele":input_tele,
+            "input_address":input_address,
+        })
+
+
+// 提交按钮，生成数据:读取表单数据，读取表格数据，并转化成数组
+        form.on('submit(btnSubmit)', function (data) {
+            //表单数据formData
+            var formData = data.field;//表单数据
+            formData["userID"]=user;
+            console.log(formData)
+            $.ajax({
+            type: "post",
+            url:"api/updateUser",
+            data:formData,
+            success:function (res) {
+                if (res["status"] == 110) {
+                layer.msg("请再提交一次！")
+                } else if (res["status"] == 200) {
+                    layer.msg("数据已保存!");
+                }
+            },
+            error:function (res) {
+                layer.msg("请再提交一次")
+            }
+        })
+            function update() { //更新函数值给父页
+            }
+            //生成总体数据的函数，将表单数据和其他合并
+
+        });
+
+    })
+
+
+
+
+
+</script>
+
+</body>
+</html></title>
+</head>
+<body>
+
+</body>
+</html>

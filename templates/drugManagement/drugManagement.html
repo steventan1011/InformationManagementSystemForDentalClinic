@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>药房处理系统</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+</head>
+
+<body>
+<div class="layui-row layui-col-space15">
+<div class="layui-col-md12">
+    <div class="layui-card">
+        <div class="layui-card-header">
+             </div>
+        <div class="layui-card-body">
+
+            <!-- 搜索框 -->
+    <form action="" class="layui-form">
+        <div class="layui-inline">
+            <input class="layui-input" placeholder="查询挂号号码" name="patientID" required autocomplete="off"
+                lay-verify="registerID">
+        </div>
+        <div class="layui-inline">
+            <input class="layui-input" name="date" id="dateChoice">
+        </div>
+        <button class="layui-btn" lay-submit lay-filter="search">搜索</button>
+    </form>
+
+    <!-- 数据表 -->
+    <table id="drugMessage" lay-filter="operation"></table>
+
+        </div>
+    </div>
+
+</div>
+</div>
+
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-group">
+            <button class="layui-btn" lay-event="getNotEnough">获取不足药品信息</button>
+            <button class="layui-btn layui-btn-normal" lay-event="reset">重置</button>
+        </div>
+        <button class="layui-btn layui-btn-warm" lay-submit lay-filter="submit"
+            lay-event="postDrugMessage">提交药单</button>
+    </script>
+
+    <script src="/static/layui/layui.js"></script>
+    <script>
+        layui.use(['table', 'form', 'layer', 'laydate'], function () {
+            var table = layui.table;
+            var form = layui.form;
+            var $ = layui.$;
+            var layer = layui.layer;
+            var laydate = layui.laydate;
+
+
+            // 实例化日期选择器
+            laydate.render({
+                elem: '#dateChoice',
+                type: 'date',
+                value: (new Date().toLocaleDateString().replace(/\//g, "-")),
+                position: 'fixed'
+            });
+            // 数据表格缓存
+            var tableCache = null;
+            // 数据表格转换格式，增加列
+            var parseData = function (res) {
+                for (var i in res) {
+                    if (res[i].quantity > res[i].storage) {
+                        res[i]["status"] = "余量不足";
+                        res[i]["LAY_CHECKED"] = true;
+                        res[i]["purchaseQuantity"] = res[i].storage;
+                    } else {
+                        res[i]["status"] = "充足";
+                        res[i]["purchaseQuantity"] = res[i].quantity;
+                    }
+                }
+                return res;
+            };
+
+            // 表格渲染
+            table.render({
+                elem: '#drugMessage',
+                // height: 1000,
+                toolbar: '#toolbarDemo',
+                defaultToolbar: null,
+                page: true, //开启分页
+                limit: 30,
+                cellMinWidth: 80,
+                initSort: {
+                    field: 'id'
+                },
+                cols: [
+                    [ //表头
+                        {
+                            type: 'checkbox',
+                            fixed: 'left'
+                        }, {
+                            field: 'id',
+                            title: '药品编号',
+                            sort: true,
+                        }, {
+                            field: 'drugName',
+                            title: '药物名',
+                        }, {
+                            field: 'specification',
+                            title: '药品规格',
+                        }, {
+                            field: 'quantity',
+                            title: '数量',
+                            sort: true
+                        }, {
+                            field: 'storage',
+                            title: '库存量',
+                            sort: true
+                        }, {
+                            field: "purchaseQuantity",
+                            title: "购买数量",
+                            edit: 'text',
+                            templet: function (d) {
+                                if (d.purchaseQuantity === d
+                                    .storage) {
+                                    return '<span style="color: #FF0000;">' +
+                                        d
+                                        .purchaseQuantity +
+                                        '</span>';
+                                } else {
+                                    return d.purchaseQuantity;
+                                }
+                            }
+                        }, {
+                            field: "status",
+                            title: '状态',
+                            templet: function (d) {
+                                if (d.status === "余量不足") {
+                                    return '<span style="color: #FF0000;">' +
+                                        d.status +
+                                        '</span>';
+                                } else {
+                                    return d.status;
+                                }
+                            }
+                        }
+                    ]
+                ]
+
+            });
+
+            var formData = null;
+            // 首先进行搜索
+            form.on('submit(search)', function (data) {
+                formData = data.field;
+                var index = layer.load();
+                // 异步获取数据
+                $.ajax({
+                    type: "get",
+                    url: 'api/getDrugBill',
+                    data: data.field,
+                    dataType: "json",
+                    success: function (res) {
+                        layer.close(index);
+                        console.log(res);
+                        if (res["count"] === 0) {
+                            table.reload('drugMessage');
+                            layer.msg("无相关药单，请检查后重新查询")
+                        } else {
+                            tableCache = parseData(res["data"]);
+                            // 表格渲染
+                            table.reload('drugMessage', {
+                                data: tableCache
+                            });
+                        }
+                    },
+                    error: function () {
+                        layer.close(index);
+                        layer.msg("未请求到数据！");
+                    }
+                });
+
+                return false;
+            });
+
+
+            // 表单验证
+            form.verify({
+                registerID: [
+                    /[\d]+/,
+                    "挂号号码必须是1,2,3...这样的自然数！"
+                ]
+            });
+
+            //头工具栏事件
+            table.on('toolbar(operation)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    // 展示不足药物
+                    case 'getNotEnough':
+                        var [...tempTableCache] = tableCache;
+                        for (var i = tempTableCache.length - 1; i >= 0; i--) {
+                            if (tempTableCache[i]["status"] == "余量不足") {
+                                continue;
+                            } else {
+                                tempTableCache.splice(i, 1);
+                            }
+                        }
+                        table.reload('drugMessage', {
+                            data: tempTableCache
+                        });
+                        break;
+
+                        // 重置页面表格
+                    case 'reset':
+                        table.reload('drugMessage', {
+                            data: tableCache
+                        });
+                        break;
+
+                        // 提交药单数据
+                    case 'postDrugMessage':
+                        var deleteItem = ["drugName", "specification", "quantity", "status"];
+                        // console.log(checkStatus);
+                        checkStatus.data.forEach(eachDrug => {
+                            // 删除不需要提交数据，减少信息传输量
+                            deleteItem.forEach(itemName => {
+                                delete eachDrug[itemName];
+                            });
+                            // 调整传回去的库存量，减去购买量
+                            eachDrug["storage"] -= eachDrug["purchaseQuantity"];
+                        });
+                        var postData = {}
+                        for (var key in formData) {
+                            postData[key] = formData[key];
+                        }
+                        for (var i = 0; i < checkStatus.data.length; i++) {
+                            postData[i] = JSON.stringify(checkStatus.data[i]);
+                        }
+                        console.log(postData);
+
+                        $.ajax({
+                            type: "post",
+                            url: "api/updateDrugBill",
+                            dataType: "json",
+                            data: postData,
+                            success: function (res) {
+                                if (res["status"] == 110) {
+                                    layer.msg("请再提交一次！")
+                                } else if (res["status"] == 200) {
+                                    layer.msg("数据已保存!");
+                                }
+                            },
+                            error: function () {
+                                layer.msg("请再提交一次!");
+                            }
+                        });
+                        break;
+
+                };
+            });
+
+
+            // 监听购买数量编辑
+            table.on('edit(operation)', function (obj) {
+                if (!new RegExp(/\d+/).test(obj.value)) {
+                    layer.msg("请输入数字！");
+                    var last = null;
+                    tableCache.forEach(item => {
+                        if (item["id"] === obj.data["id"]) {
+                            last = item[obj.field]
+                        }
+                    });
+                    obj.update({
+                        purchaseQuantity: last
+                    });
+                } else {
+                    obj.update({
+                        purchaseQuantity: obj.value
+                    })
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>
